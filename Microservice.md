@@ -30,6 +30,14 @@ The microservice should be able to parse `.owl` and `.obo` files to import ontol
 - 2. TypeScript - rdf library that can read java owl-api output. owl/obo -> owl-api -> rdf format -> rdflib.js (https://github.com/linkeddata/rdflib.js/)
 - 3. dotNetRDF (and OBO.NET) - Either mimic TypeScript approach and use owl-api to transform readable format or use dotNetRDF for owl and OBO.NET for obo, which then must be unified into a common model for db transfer (https://dotnetrdf.org/, https://github.com/CSBiology/OBO.NET)
 
+### Recommendation - TypeScript
+
+- Use owl-api via `java-bridge` nodejs library (https://markusjx.github.io/node-java-bridge/#example-hello-world-from-java)
+
+  > Build a thin Java wrapper JAR (fat JAR via Maven shade or Gradle shadow) that exposes a simplified API surface — e.g., OntologyParser.parse(filePath): ParsedOntology that returns a JSON-serializable structure (terms, relationships, metadata). Then call just that one class via java-bridge.
+
+- Use rdflib.js to parse the owl-api output and transform it into the graph database format for import. This approach allows us to leverage the strengths of both Java (for ontology parsing) and TypeScript (for microservice development) while maintaining a clear separation of concerns between the parsing logic and the microservice logic.
+
 ## Current DB Schema
 
 ### Nodes
@@ -304,3 +312,30 @@ Give feedback on import and request status to users and admins.
 ### Details
 
 - The microservice MUST include a minimal frontend interface for users and admins to view the status of the webhook, and monitor the import process. This interface should be user-friendly and provide clear information about the current state of the graph database and any recent changes.
+
+# Project Structure
+
+## src/
+
+- Shared Java library for ontology parsing (owl-api wrapper).
+  - MUST include read .OBO
+  - MUST include read .OWL
+  - MUST include output in a format that can be easily parsed by `rdflib.js`.
+- Parsing javascript library that uses `java-bridge` to call the Java wrapper and then transforms the output into a internal model.
+  - MUST be usable for the microservice backend
+  - MUST be usable for CI checks in the GitHub repository.
+- Microservice backend implemented in TypeScript that uses the parsing library to import ontologies into the neo4j graph database and implements the MOD-API for interoperability with the api gateway.
+  - SHOULD use GitHub App authentication workflow for webhook configuration and import triggering.
+  - SHOULD use a single shared admin token/password for neo4j authentication, which can be configured via environment variables in the docker-compose file.
+- Frontend interface
+  - MUST show status of import
+  - MUST show status of database
+  - MUST show recent changes to the database (history of imports, recent changes to terms and relationships, etc.)
+
+## tests/
+
+- Unit tests for the Java wrapper library to ensure correct parsing of .OBO and .OWL files.
+- Unit tests for the parsing JavaScript library to ensure correct transformation of the Java output into the internal model.
+- Neo4j query tests to validate the correct import of ontologies into the graph database and the integrity of the data.
+  - Use `testcontainers` for nodejs `https://node.testcontainers.org/quickstart/usage/` to run a temporary neo4j instance for testing purposes, allowing for isolated and repeatable tests of the database interactions without affecting the production database.
+  - Either seed the test database directly inside a test or push a pre-seeded test database volume to version control. 
