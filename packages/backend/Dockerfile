@@ -18,7 +18,7 @@ RUN npm ci
 
 FROM deps AS dev
 
-RUN apk add --no-cache openjdk17-jre-headless ca-certificates
+RUN apk add --no-cache openjdk17 ca-certificates
 
 COPY --from=parser-build /build/java-parser/target/java-parser-all.jar /opt/swatedb/java-parser.jar
 
@@ -45,7 +45,7 @@ ENV PORT=3000
 ENV JAVA_BRIDGE_JAR_PATH=/opt/swatedb/java-parser.jar
 ENV JAVA_HOME=/usr/lib/jvm/java-17-openjdk
 
-RUN apk add --no-cache openjdk17-jre-headless ca-certificates
+RUN apk add --no-cache openjdk17 ca-certificates
 
 COPY package.json package-lock.json tsconfig.base.json tsconfig.json ./
 COPY ci-tools/package.json ./ci-tools/package.json
