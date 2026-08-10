@@ -1,5 +1,7 @@
 import { existsSync, readdirSync } from 'node:fs';
 import path from 'node:path';
+import { createInterface } from 'node:readline';
+import { execFileSync } from 'node:child_process';
 import { appendClasspath, ensureJvm as ensureJavaJvm, importClass } from 'java-bridge';
 import { ZodError } from 'zod';
 import { ontologySchema, type Ontology } from './model';
@@ -35,6 +37,60 @@ export interface JvmInitOptions {
 
 const DEFAULT_JVM_OPTS = ['-Xms128m', '-Xmx512m'];
 
+export function diagnoseJvm(): string {
+  const lines: string[] = [];
+
+  lines.push('=== JVM Diagnostics ===');
+  lines.push(`platform: ${process.platform} ${process.arch}`);
+
+  const javaHome = process.env.JAVA_HOME ?? '<not set>';
+  lines.push(`JAVA_HOME: ${javaHome}`);
+
+  const jarPath = process.env.JAVA_BRIDGE_JAR_PATH ?? '<not set>';
+  lines.push(`JAVA_BRIDGE_JAR_PATH: ${jarPath}`);
+
+  if (javaHome !== '<not set>') {
+    const libServer = path.join(javaHome, 'lib', 'server');
+    lines.push(`lib/server exists: ${existsSync(libServer)}`);
+    if (existsSync(libServer)) {
+      try {
+        const entries = readdirSync(libServer);
+        lines.push(`lib/server contents: ${entries.join(', ')}`);
+      } catch (err) {
+        lines.push(`lib/server read error: ${String(err)}`);
+      }
+    }
+
+    const modulesPath = path.join(javaHome, 'lib', 'modules');
+    lines.push(`lib/modules exists: ${existsSync(modulesPath)}`);
+
+    const javaBin = path.join(javaHome, 'bin', 'java');
+    lines.push(`bin/java exists: ${existsSync(javaBin)}`);
+
+    if (existsSync(javaBin)) {
+      try {
+        const version = execFileSync(javaBin, ['-version'], {
+          encoding: 'utf8',
+          stdio: ['ignore', 'pipe', 'pipe'],
+          timeout: 5000,
+        });
+        lines.push(`java -version stdout: ${version.trim()}`);
+      } catch (err: unknown) {
+        const stderr = (err as { stderr?: string }).stderr ?? String(err);
+        lines.push(`java -version output (stderr): ${stderr.trim()}`);
+      }
+    }
+  }
+
+  if (jarPath !== '<not set>') {
+    lines.push(`JAR exists: ${existsSync(jarPath)}`);
+  }
+
+  lines.push('========================');
+
+  return lines.join('\n');
+}
+
 export function ensureJvm(options: JvmInitOptions = {}): void {
   const jarPath = resolveJarPath();
 
@@ -46,8 +102,22 @@ export function ensureJvm(options: JvmInitOptions = {}): void {
   if (!jvmInitialized) {
     const opts = options.jvmOpts ?? DEFAULT_JVM_OPTS;
 
-    ensureJavaJvm({ opts });
+    console.error('[bridge] ensureJvm: JAVA_HOME=%s, opts=%s, jarPath=%s', process.env.JAVA_HOME ?? '<unset>', JSON.stringify(opts), jarPath);
+    console.error(diagnoseJvm());
 
+    try {
+      ensureJavaJvm({ opts });
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      const stack = error instanceof Error ? error.stack : undefined;
+      console.error(`[bridge] ensureJavaJvm FAILED: ${message}`);
+      if (stack !== undefined) {
+        console.error(stack);
+      }
+      throw error;
+    }
+
+    console.error('[bridge] ensureJvm: JVM initialized successfully');
     jvmInitialized = true;
   }
 
