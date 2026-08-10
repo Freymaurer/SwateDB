@@ -2,7 +2,7 @@
 
 Backend microservice package for ingestion, indexing, and MOD-API delivery.
 
-Status: Phase 3a core implemented.
+Status: Phase 3a + 3b implemented.
 
 ## Implemented in Phase 3a
 
@@ -15,6 +15,20 @@ Status: Phase 3a core implemented.
 - Centralized JSON error middleware.
 - Unit tests and Neo4j integration tests (testcontainers).
 
+## Implemented in Phase 3b
+
+- GitHub App repository client with installation-scoped authentication.
+- Webhook endpoint at /api/github/webhooks with signature verification and replay protection.
+- Import planning service that reads .swatedb.yml include/exclude and externals.
+- BullMQ queue APIs for enqueueing, listing, and reading job status.
+- Queue worker startup with progress reporting and concurrency set to 2.
+- Admin API routes:
+	- POST /api/admin/sync
+	- GET /api/admin/jobs
+	- GET /api/admin/jobs/:id
+- Bearer token auth middleware for admin routes.
+- Unit tests for webhook auth failures, valid push queueing, include/exclude filtering, and import pipeline flow.
+
 ## Environment Variables
 
 - PORT
@@ -24,6 +38,11 @@ Status: Phase 3a core implemented.
 - REDIS_URL
 - JAVA_BRIDGE_JAR_PATH
 - LOG_LEVEL (optional)
+- GITHUB_API_BASE_URL (optional, defaults to https://api.github.com)
+- GITHUB_APP_ID
+- GITHUB_PRIVATE_KEY
+- GITHUB_WEBHOOK_SECRET
+- ADMIN_TOKEN
 
 ## Current Commands
 

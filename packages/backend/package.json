@@ -13,6 +13,7 @@
     "test:integration": "vitest run tests/integration"
   },
   "dependencies": {
+    "@octokit/auth-app": "^8.1.5",
     "@swatedb/ontology-lib": "0.1.0",
     "bullmq": "^5.58.5",
     "cors": "^2.8.5",

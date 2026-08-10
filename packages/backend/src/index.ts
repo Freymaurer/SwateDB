@@ -13,12 +13,17 @@ import {
 } from './db/neo4j';
 import { ensureSchema } from './db/schema';
 import { errorHandler, notFoundHandler } from './middleware/error-handler';
+import { createAdminRouter } from './routes/admin';
 import { createHealthRouter, type HealthRouteOptions } from './routes/health';
+import { createWebhookRouter } from './routes/webhooks';
+import { createImportService } from './services/import-service';
 import {
 	checkRedisHealth,
 	closeQueueResources,
 	getQueueResources,
 	initializeQueueResources,
+	startImportWorker,
+	stopImportWorker,
 } from './services/job-queue';
 
 const logger = pino({
@@ -28,6 +33,7 @@ const logger = pino({
 
 export interface CreateAppOptions {
 	health?: HealthRouteOptions;
+	importService?: ReturnType<typeof createImportService>;
 }
 
 export interface StartServerOptions {
@@ -42,11 +48,26 @@ export interface AppRuntime {
 
 export function createApp(options: CreateAppOptions = {}): Express {
 	const app = express();
+	const importService = options.importService;
 
 	app.disable('x-powered-by');
 	app.use(helmet());
 	app.use(cors());
+
+	if (importService !== undefined) {
+		app.use(
+			'/api/github/webhooks',
+			createWebhookRouter({
+				importService,
+			}),
+		);
+	}
+
 	app.use(express.json({ limit: '2mb' }));
+
+	if (importService !== undefined) {
+		app.use('/api/admin', createAdminRouter({ importService }));
+	}
 
 	app.get('/', (_request, response) => {
 		response.status(200).json({
@@ -71,8 +92,15 @@ export async function startServer(options: StartServerOptions = {}): Promise<App
 	await ensureSchema(driver);
 
 	const queueResources = await initializeQueueResources();
+	const importService = createImportService();
+
+	await startImportWorker((data, reportProgress) => importService.processImportJob(data, reportProgress), {
+		resources: queueResources,
+		concurrency: 2,
+	});
 
 	const app = createApp({
+		importService,
 		health: {
 			neo4jProbe: async () => checkNeo4jHealth(driver),
 			redisProbe: async () => checkRedisHealth(queueResources),
@@ -90,6 +118,7 @@ export async function startServer(options: StartServerOptions = {}): Promise<App
 
 		isShuttingDown = true;
 		await closeServer(server);
+		await stopImportWorker();
 		await closeQueueResources();
 		await closeNeo4jDriver();
 		logger.info('Backend server shutdown complete');
