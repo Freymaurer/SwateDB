@@ -1,0 +1,26 @@
+<?xml version="1.0"?>
+<rdf:RDF xmlns="http://example.org/small.owl#"
+         xml:base="http://example.org/small.owl"
+         xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+         xmlns:owl="http://www.w3.org/2002/07/owl#"
+         xmlns:rdfs="http://www.w3.org/2000/01/rdf-schema#"
+         xmlns:xsd="http://www.w3.org/2001/XMLSchema#"
+         xmlns:obo="http://purl.obolibrary.org/obo/">
+
+  <owl:Ontology rdf:about="http://example.org/small.owl">
+    <rdfs:label>Small Ontology</rdfs:label>
+    <owl:versionIRI rdf:resource="http://example.org/small.owl/1.0"/>
+  </owl:Ontology>
+
+  <owl:Class rdf:about="http://purl.obolibrary.org/obo/TEST_0001">
+    <rdfs:label>term one</rdfs:label>
+    <obo:IAO_0000115>definition one</obo:IAO_0000115>
+    <rdfs:subClassOf rdf:resource="http://purl.obolibrary.org/obo/TEST_0002"/>
+  </owl:Class>
+
+  <owl:Class rdf:about="http://purl.obolibrary.org/obo/TEST_0002">
+    <rdfs:label>parent term</rdfs:label>
+    <owl:deprecated rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean">true</owl:deprecated>
+  </owl:Class>
+
+</rdf:RDF>

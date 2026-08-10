@@ -2,10 +2,10 @@
   "name": "@swatedb/java-parser",
   "version": "0.1.0",
   "private": true,
-  "description": "Java parser workspace placeholder",
+  "description": "Java OWL/OBO parser workspace",
   "scripts": {
-    "lint": "node -e \"console.log('java-parser lint placeholder')\"",
-    "build": "node -e \"console.log('java-parser build placeholder; use Maven in later phase')\"",
-    "test": "node -e \"console.log('java-parser test placeholder; use Maven in later phase')\""
+    "lint": "node -e \"console.log('java-parser lint: no additional step for Java sources')\"",
+    "build": "node ./scripts/maven-runner.js -q clean package -DskipTests",
+    "test": "node ./scripts/maven-runner.js test"
   }
 }

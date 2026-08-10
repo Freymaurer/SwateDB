@@ -1,0 +1,15 @@
+format-version: 1.2
+ontology: small
+
+[Term]
+id: TEST:0001
+name: term one
+def: "definition one" []
+synonym: "alias one" EXACT []
+is_a: TEST:0002 ! parent term
+relationship: part_of TEST:0002 ! parent term
+
+[Term]
+id: TEST:0002
+name: parent term
+is_obsolete: true
