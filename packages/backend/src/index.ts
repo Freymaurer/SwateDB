@@ -15,6 +15,12 @@ import { ensureSchema } from './db/schema';
 import { errorHandler, notFoundHandler } from './middleware/error-handler';
 import { createAdminRouter } from './routes/admin';
 import { createHealthRouter, type HealthRouteOptions } from './routes/health';
+import { createArtefactsRouter } from './routes/mod-api/artefacts';
+import { createCatalogueRouter } from './routes/mod-api/catalogue';
+import { createDocsRouter } from './routes/mod-api/docs';
+import { createRecordsRouter } from './routes/mod-api/records';
+import { createSearchRouter } from './routes/mod-api/search';
+import { createModApiService } from './routes/mod-api/service';
 import { createWebhookRouter } from './routes/webhooks';
 import { createImportService } from './services/import-service';
 import {
@@ -34,6 +40,7 @@ const logger = pino({
 export interface CreateAppOptions {
 	health?: HealthRouteOptions;
 	importService?: ReturnType<typeof createImportService>;
+	modApiService?: ReturnType<typeof createModApiService>;
 }
 
 export interface StartServerOptions {
@@ -49,6 +56,7 @@ export interface AppRuntime {
 export function createApp(options: CreateAppOptions = {}): Express {
 	const app = express();
 	const importService = options.importService;
+	const modApiService = options.modApiService ?? createModApiService();
 
 	app.disable('x-powered-by');
 	app.use(helmet());
@@ -69,12 +77,11 @@ export function createApp(options: CreateAppOptions = {}): Express {
 		app.use('/api/admin', createAdminRouter({ importService }));
 	}
 
-	app.get('/', (_request, response) => {
-		response.status(200).json({
-			service: 'swatedb-backend',
-			status: 'ok',
-		});
-	});
+	app.use('/doc/api', createDocsRouter());
+	app.use('/records', createRecordsRouter(modApiService));
+	app.use('/artefacts', createArtefactsRouter(modApiService));
+	app.use('/search', createSearchRouter(modApiService));
+	app.use('/', createCatalogueRouter(modApiService));
 
 	app.use('/health', createHealthRouter(options.health));
 
@@ -101,6 +108,7 @@ export async function startServer(options: StartServerOptions = {}): Promise<App
 
 	const app = createApp({
 		importService,
+		modApiService: createModApiService(driver),
 		health: {
 			neo4jProbe: async () => checkNeo4jHealth(driver),
 			redisProbe: async () => checkRedisHealth(queueResources),
@@ -185,7 +193,14 @@ function shouldAutoStart(): boolean {
 		return false;
 	}
 
-	return entrypoint.endsWith('index.js') && process.env.NODE_ENV !== 'test';
+	const normalizedEntrypoint = entrypoint.replace(/\\/g, '/').toLowerCase();
+	const isBackendEntrypoint =
+		normalizedEntrypoint.endsWith('/dist/index.js') ||
+		normalizedEntrypoint.endsWith('/src/index.ts') ||
+		normalizedEntrypoint.endsWith('/index.js') ||
+		normalizedEntrypoint.endsWith('/index.ts');
+
+	return isBackendEntrypoint && process.env.NODE_ENV !== 'test';
 }
 
 if (shouldAutoStart()) {

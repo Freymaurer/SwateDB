@@ -1,4 +1,5 @@
 import type { ErrorRequestHandler, RequestHandler } from 'express';
+import { ZodError } from 'zod';
 
 export interface ErrorResponseBody {
 	error: {
@@ -56,6 +57,10 @@ export const errorHandler: ErrorRequestHandler = (error, _request, response, _ne
 function toHttpError(error: unknown): HttpError {
 	if (error instanceof HttpError) {
 		return error;
+	}
+
+	if (error instanceof ZodError) {
+		return new HttpError(400, 'validation_error', 'Request validation failed.', error.issues);
 	}
 
 	if (error instanceof Error) {
