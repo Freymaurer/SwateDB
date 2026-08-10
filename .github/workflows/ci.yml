@@ -35,6 +35,15 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Build Java parser with Maven
+        run: |
+          if [ -f packages/java-parser/pom.xml ]; then
+            cd packages/java-parser
+            mvn -q clean package -DskipTests
+          else
+            echo "Skipping Maven build: packages/java-parser/pom.xml not present yet."
+          fi
+
       - name: Lint
         run: npm run lint
 
@@ -42,13 +51,6 @@ jobs:
         run: npm run build
 
       - name: Test
+        env:
+          JAVA_BRIDGE_JAR_PATH: ${{ github.workspace }}/packages/java-parser/target/java-parser-0.1.0-all.jar
         run: npm run test
-
-      - name: Build Java parser with Maven
-        run: |
-          if [ -f packages/java-parser/pom.xml ]; then
-            cd packages/java-parser
-            mvn -q clean package
-          else
-            echo "Skipping Maven build: packages/java-parser/pom.xml not present yet."
-          fi
