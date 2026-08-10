@@ -1,0 +1,12 @@
+node_modules/
+dist/
+coverage/
+target/
+*.jar
+.env
+.env.*
+!.env.example
+neo4j-data/
+.DS_Store
+.vscode/
+.idea/

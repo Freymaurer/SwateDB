@@ -1,0 +1,33 @@
+name: Ontology CI Template
+
+on:
+  workflow_call:
+    inputs:
+      config-path:
+        description: Path to ontology CI config
+        required: false
+        type: string
+        default: .swatedb.yml
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - name: Placeholder
+        run: |
+          echo "Ontology CI template scaffolded in Phase 0."
+          echo "Config path: ${{ inputs.config-path }}"

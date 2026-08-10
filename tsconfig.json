@@ -1,0 +1,9 @@
+{
+  "files": [],
+  "references": [
+    { "path": "./packages/ontology-lib" },
+    { "path": "./packages/backend" },
+    { "path": "./packages/frontend" },
+    { "path": "./ci-tools" }
+  ]
+}

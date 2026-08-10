@@ -1,0 +1,54 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+
+jobs:
+  build-test:
+    name: Lint, Build, Test
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node-version: [20]
+        java-version: [17]
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: npm
+
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: ${{ matrix.java-version }}
+          cache: maven
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Build
+        run: npm run build
+
+      - name: Test
+        run: npm run test
+
+      - name: Build Java parser with Maven
+        run: |
+          if [ -f packages/java-parser/pom.xml ]; then
+            cd packages/java-parser
+            mvn -q clean package
+          else
+            echo "Skipping Maven build: packages/java-parser/pom.xml not present yet."
+          fi

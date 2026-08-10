@@ -1,0 +1,13 @@
+{
+  "name": "@swatedb/frontend",
+  "version": "0.1.0",
+  "private": true,
+  "description": "SwateDB frontend admin dashboard",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "lint": "eslint . --ext .ts,.tsx",
+    "build": "tsc -p tsconfig.json",
+    "test": "node -e \"console.log('frontend tests not implemented yet')\""
+  }
+}

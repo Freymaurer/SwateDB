@@ -1,0 +1,56 @@
+name: New Term Request
+description: Request creation of a new ontology term
+title: '[Term Request]: '
+labels:
+  - term-request
+body:
+  - type: input
+    id: ontology
+    attributes:
+      label: Ontology
+      description: Which ontology should this term be added to?
+      placeholder: e.g. ENVO
+    validations:
+      required: true
+
+  - type: input
+    id: term-name
+    attributes:
+      label: Term Name
+      placeholder: Human readable term name
+    validations:
+      required: true
+
+  - type: textarea
+    id: definition
+    attributes:
+      label: Definition
+      description: Provide a concise definition.
+    validations:
+      required: true
+
+  - type: input
+    id: parent
+    attributes:
+      label: Parent Term ID
+      description: Existing parent accession if known
+      placeholder: e.g. ENVO:00000001
+    validations:
+      required: false
+
+  - type: textarea
+    id: relationships
+    attributes:
+      label: Relationships
+      description: Any known related terms and relationship types
+      placeholder: has_part ENVO:00000002
+    validations:
+      required: false
+
+  - type: textarea
+    id: references
+    attributes:
+      label: References
+      description: Supporting links, citations, or documents
+    validations:
+      required: false

@@ -1,0 +1,14 @@
+services:
+  backend:
+    environment:
+      NODE_ENV: development
+    volumes:
+      - ./packages/backend:/app/packages/backend
+    ports:
+      - "9229:9229"
+
+  frontend:
+    environment:
+      NODE_ENV: development
+    volumes:
+      - ./packages/frontend:/app/packages/frontend

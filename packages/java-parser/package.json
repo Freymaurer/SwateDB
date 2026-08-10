@@ -1,0 +1,11 @@
+{
+  "name": "@swatedb/java-parser",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Java parser workspace placeholder",
+  "scripts": {
+    "lint": "node -e \"console.log('java-parser lint placeholder')\"",
+    "build": "node -e \"console.log('java-parser build placeholder; use Maven in later phase')\"",
+    "test": "node -e \"console.log('java-parser test placeholder; use Maven in later phase')\""
+  }
+}
