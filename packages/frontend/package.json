@@ -2,6 +2,7 @@
   "name": "@swatedb/frontend",
   "version": "0.1.0",
   "private": true,
+  "type": "module",
   "description": "SwateDB frontend admin dashboard",
   "main": "dist/index.html",
   "scripts": {
@@ -16,9 +17,12 @@
     "react-dom": "^18.3.1"
   },
   "devDependencies": {
+    "@tailwindcss/vite": "^4.3.3",
     "@types/react": "^18.3.12",
     "@types/react-dom": "^18.3.1",
     "@vitejs/plugin-react": "^4.3.1",
+    "daisyui": "^5.7.16",
+    "tailwindcss": "^4.3.3",
     "typescript": "^5.9.2",
     "vite": "^5.4.10"
   }
