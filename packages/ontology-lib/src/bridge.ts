@@ -30,18 +30,7 @@ export function initJvm(jarPath: string): void {
 }
 
 export interface JvmInitOptions {
-  javaHome?: string;
   jvmOpts?: string[];
-}
-
-function resolveJavaLibPath(javaHome: string): string {
-  if (process.platform === 'win32') {
-    return path.join(javaHome, 'bin', 'server', 'jvm.dll');
-  }
-  if (process.platform === 'darwin') {
-    return path.join(javaHome, 'lib', 'server', 'libjvm.dylib');
-  }
-  return path.join(javaHome, 'lib', 'server', 'libjvm.so');
 }
 
 const DEFAULT_JVM_OPTS = ['-Xms128m', '-Xmx512m'];
@@ -55,15 +44,9 @@ export function ensureJvm(options: JvmInitOptions = {}): void {
   }
 
   if (!jvmInitialized) {
-    const javaHome = options.javaHome ?? process.env.JAVA_HOME ?? undefined;
-    const libPath = javaHome !== undefined ? resolveJavaLibPath(javaHome) : undefined;
     const opts = options.jvmOpts ?? DEFAULT_JVM_OPTS;
 
-    ensureJavaJvm({
-      libPath: libPath ?? undefined,
-      version: undefined,
-      opts,
-    });
+    ensureJavaJvm({ opts });
 
     jvmInitialized = true;
   }
