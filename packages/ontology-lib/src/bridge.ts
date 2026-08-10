@@ -1,4 +1,4 @@
-import { existsSync } from 'node:fs';
+import { existsSync, readdirSync } from 'node:fs';
 import path from 'node:path';
 import { appendClasspath, ensureJvm as ensureJavaJvm, importClass } from 'java-bridge';
 import { ZodError } from 'zod';
@@ -119,12 +119,46 @@ function resolveJarPath(): string {
   }
 
   const envJarPath = process.env.JAVA_BRIDGE_JAR_PATH;
-  if (envJarPath === undefined || envJarPath.trim().length === 0) {
-    throw new ParserError('JAR path is not configured. Call initJvm() or set JAVA_BRIDGE_JAR_PATH.');
+  if (envJarPath !== undefined && envJarPath.trim().length > 0) {
+    configuredJarPath = normalizeJarPath(envJarPath);
+    return configuredJarPath;
   }
 
-  configuredJarPath = normalizeJarPath(envJarPath);
-  return configuredJarPath;
+  const discovered = discoverJar();
+  if (discovered !== null) {
+    configuredJarPath = discovered;
+    return configuredJarPath;
+  }
+
+  throw new ParserError(
+    'Could not locate the Java parser JAR. Set JAVA_BRIDGE_JAR_PATH or build the java-parser package.',
+  );
+}
+
+function discoverJar(): string | null {
+  const pattern = /^java-parser-.+-all\.jar$/;
+  const searchDirs = [
+    path.resolve('packages', 'java-parser', 'target'),
+    path.resolve(__dirname, '..', '..', 'java-parser', 'target'),
+  ];
+
+  for (const dir of searchDirs) {
+    if (!existsSync(dir)) {
+      continue;
+    }
+
+    try {
+      const entries = readdirSync(dir);
+      const jar = entries.find((entry) => pattern.test(entry));
+      if (jar !== undefined) {
+        return path.join(dir, jar);
+      }
+    } catch {
+      continue;
+    }
+  }
+
+  return null;
 }
 
 function normalizeJarPath(jarPath: string): string {
