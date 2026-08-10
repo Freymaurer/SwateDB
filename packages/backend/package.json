@@ -8,6 +8,30 @@
   "scripts": {
     "lint": "eslint . --ext .ts",
     "build": "tsc -p tsconfig.json",
-    "test": "node -e \"console.log('backend tests not implemented yet')\""
+    "test": "vitest run",
+    "test:unit": "vitest run tests/unit",
+    "test:integration": "vitest run tests/integration"
+  },
+  "dependencies": {
+    "@swatedb/ontology-lib": "0.1.0",
+    "bullmq": "^5.58.5",
+    "cors": "^2.8.5",
+    "dotenv": "^16.6.1",
+    "express": "^4.21.2",
+    "helmet": "^8.1.0",
+    "ioredis": "^5.8.1",
+    "neo4j-driver": "^5.28.2",
+    "pino": "^9.9.0",
+    "zod": "^3.25.76"
+  },
+  "devDependencies": {
+    "@types/cors": "^2.8.19",
+    "@types/express": "^4.17.23",
+    "@types/node": "^22.15.21",
+    "@types/supertest": "^6.0.3",
+    "supertest": "^7.1.4",
+    "testcontainers": "^11.7.1",
+    "typescript": "^5.9.2",
+    "vitest": "^2.1.9"
   }
 }
