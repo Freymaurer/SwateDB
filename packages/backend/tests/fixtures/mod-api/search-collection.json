@@ -1,0 +1,37 @@
+{
+  "@context": {
+    "dcterms": "http://purl.org/dc/terms/",
+    "hydra": "http://www.w3.org/ns/hydra/core#",
+    "mod": "https://w3id.org/mod#"
+  },
+  "@id": "http://mod.test/search/?format=jsonld&q=demo&page=1&pagesize=10",
+  "@type": "hydra:Collection",
+  "totalItems": 2,
+  "itemsPerPage": 10,
+  "member": [
+    {
+      "@id": "/artefacts/demo-ontology/resources/DEMO%3A0001",
+      "@type": "mod:SearchContentResult",
+      "dcterms:identifier": "DEMO:0001",
+      "dcterms:title": "Demo Term",
+      "dcterms:description": "A demo term",
+      "mod:resultType": "content",
+      "mod:artefact": "demo-ontology"
+    },
+    {
+      "@id": "/artefacts/demo-ontology",
+      "@type": "mod:SearchMetadataResult",
+      "dcterms:identifier": "demo-ontology",
+      "dcterms:title": "Demo Ontology",
+      "dcterms:description": "A demo ontology",
+      "mod:resultType": "metadata",
+      "mod:artefact": "demo-ontology"
+    }
+  ],
+  "view": {
+    "@id": "http://mod.test/search/?format=jsonld&q=demo&page=1&pagesize=10",
+    "@type": "hydra:PartialCollectionView",
+    "hydra:first": "http://mod.test/search/?format=jsonld&q=demo&page=1&pagesize=10",
+    "hydra:last": "http://mod.test/search/?format=jsonld&q=demo&page=1&pagesize=10"
+  }
+}

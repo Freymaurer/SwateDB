@@ -1,0 +1,32 @@
+{
+  "@context": {
+    "dcat": "http://www.w3.org/ns/dcat#",
+    "dcterms": "http://purl.org/dc/terms/",
+    "hydra": "http://www.w3.org/ns/hydra/core#",
+    "mod": "https://w3id.org/mod#"
+  },
+  "@id": "http://mod.test/artefacts/?format=jsonld&page=1&pagesize=10",
+  "@type": "hydra:Collection",
+  "totalItems": 1,
+  "itemsPerPage": 10,
+  "member": [
+    {
+      "@id": "/artefacts/demo-ontology",
+      "@type": "mod:SemanticArtefact",
+      "dcterms:identifier": "demo-ontology",
+      "dcterms:title": "Demo Ontology",
+      "dcterms:description": "A demo ontology",
+      "dcterms:creator": "swatedb",
+      "dcterms:license": "MIT",
+      "owl:versionIRI": "https://example.org/demo/1.0.0",
+      "dcterms:modified": "2026-08-10T00:00:00Z",
+      "mod:acronym": "demo-ontology"
+    }
+  ],
+  "view": {
+    "@id": "http://mod.test/artefacts/?format=jsonld&page=1&pagesize=10",
+    "@type": "hydra:PartialCollectionView",
+    "hydra:first": "http://mod.test/artefacts/?format=jsonld&page=1&pagesize=10",
+    "hydra:last": "http://mod.test/artefacts/?format=jsonld&page=1&pagesize=10"
+  }
+}

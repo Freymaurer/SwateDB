@@ -1,14 +1,32 @@
 services:
   backend:
+    build:
+      context: .
+      dockerfile: packages/backend/Dockerfile
+      target: dev
+    command: npm run dev --workspace=@swatedb/backend
     environment:
       NODE_ENV: development
+      LOG_LEVEL: debug
+      NODE_OPTIONS: --inspect=0.0.0.0:9229
+      JAVA_BRIDGE_JAR_PATH: /opt/swatedb/java-parser.jar
     volumes:
       - ./packages/backend:/app/packages/backend
+      - ./packages/ontology-lib:/app/packages/ontology-lib
+      - ./openapi.yaml:/app/openapi.yaml:ro
     ports:
       - "9229:9229"
 
   frontend:
+    build:
+      context: .
+      dockerfile: packages/frontend/Dockerfile
+      target: dev
+    command: npm run dev --workspace=@swatedb/frontend -- --host 0.0.0.0 --port 5173
     environment:
       NODE_ENV: development
+      VITE_API_PROXY_TARGET: http://backend:3000
     volumes:
       - ./packages/frontend:/app/packages/frontend
+    ports:
+      - "5173:5173"

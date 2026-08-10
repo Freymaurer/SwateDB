@@ -1,0 +1,15 @@
+node_modules
+**/node_modules
+dist
+**/dist
+coverage
+**/coverage
+target
+**/target
+.git
+.gitignore
+.vscode
+.idea
+*.log
+*.tsbuildinfo
+**/*.tsbuildinfo

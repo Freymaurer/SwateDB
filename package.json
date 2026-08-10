@@ -16,6 +16,11 @@
     "build": "npm run build --workspaces --if-present",
     "test": "npm run test --workspaces --if-present",
     "check": "npm run lint && npm run build && npm run test",
+    "compose:up": "docker compose up -d --build",
+    "compose:down": "docker compose down",
+    "compose:dev:up": "docker compose -f docker-compose.yml -f docker-compose.dev.yml up --build",
+    "compose:dev:down": "docker compose -f docker-compose.yml -f docker-compose.dev.yml down",
+    "smoke:e2e": "node ./scripts/e2e-smoke.mjs",
     "format": "prettier --check .",
     "format:write": "prettier --write ."
   },

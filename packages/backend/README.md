@@ -2,7 +2,7 @@
 
 Backend microservice package for ingestion, indexing, and MOD-API delivery.
 
-Status: Phase 3a + 3b + 3c implemented.
+Status: Phase 3a + 3b + 3c + 3d implemented.
 
 ## Implemented in Phase 3a
 
@@ -60,6 +60,13 @@ Status: Phase 3a + 3b + 3c implemented.
 - Runtime 406 handling for recognized but unsupported formats (ttl, rdfxml).
 - Unit tests include path coverage for all required MOD API endpoints.
 
+## Implemented in Phase 3d
+
+- Dedicated backend contract test suite command: `npm run test:contract`.
+- OpenAPI drift gate that compares backend endpoint coverage against `openapi.yaml` path definitions.
+- Snapshot fixtures for representative JSON-LD responses (`artefacts` collection and `search` collection).
+- CI contract-gate job that fails on route coverage drift, schema mismatch, or snapshot mismatch.
+
 ## Environment Variables
 
 - PORT
@@ -83,6 +90,7 @@ npm run build
 npm run dev
 npm run start
 npm run test
+npm run test:contract
 npm run test:unit
 npm run test:integration
 ```

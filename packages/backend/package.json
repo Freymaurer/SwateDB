@@ -11,6 +11,7 @@
     "dev": "tsx watch src/index.ts",
     "start": "node dist/index.js",
     "test": "vitest run",
+    "test:contract": "vitest run tests/unit/mod-api-routes.test.ts tests/unit/mod-api-ajv.test.ts tests/unit/mod-api-snapshots.test.ts tests/unit/openapi-drift.test.ts",
     "test:unit": "vitest run tests/unit",
     "test:integration": "vitest run tests/integration"
   },
