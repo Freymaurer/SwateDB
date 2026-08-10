@@ -45,6 +45,44 @@ Replace all CSS classes with Tailwind utilities and daisyUI components:
 | `.sync-form` | `<form class="card bg-base-200 p-6">` |
 | Ambient blobs | Tailwind `animate-pulse` + `bg-primary/10 blur-3xl` placed absolutely |
 
+### Component Architecture
+
+Split the single `App.tsx` (568 lines) into a clean component tree with separation of concerns:
+
+```
+packages/frontend/src/
+├── main.tsx
+├── App.tsx                    (shell: layout, token state, topbar, tabs, view switching)
+├── styles.css                 (Tailwind + daisyUI entry)
+├── api.ts                     (unchanged)
+├── components/
+│   ├── TokenModal.tsx         (token entry modal overlay with validation)
+│   ├── DashboardView.tsx      (dashboard tab: health, metrics, db stats, latest jobs)
+│   ├── JobsView.tsx           (import log tab: job list + selected job detail)
+│   ├── SyncView.tsx           (manual sync trigger form)
+│   └── AlertBanner.tsx        (reusable error/success alert)
+├── lib/
+│   ├── token.ts               (readStoredToken, storeToken)
+│   ├── errors.ts              (toErrorMessage, isAuthError, toTokenPromptMessage)
+│   └── format.ts              (formatTimestamp)
+```
+
+**Component responsibilities:**
+
+| Component | Props | Description |
+|---|---|---|
+| `App` | (none) | Top-level shell. Owns auth token, view state, data fetching. Renders Topbar, Tabs, TokenModal, and the active view. |
+| `TokenModal` | `tokenDraft`, `onTokenDraftChange`, `onSave`, `errorMessage` | Full-screen modal requiring admin token input. |
+| `DashboardView` | `health`, `dbStats`, `stats`, `latestJobs`, `busy` | Dashboard tab content. Contains `StatusCard` and `MetricCard` as inline sub-components (small, only used here). |
+| `JobsView` | `jobs`, `selectedJobId`, `selectedJob`, `onSelectJob` | Import log with scrollable job list and detail panel. |
+| `SyncView` | `syncForm`, `onSyncFormChange`, `onSubmit`, `busy` | Manual sync trigger form. |
+| `AlertBanner` | `type` ("error" \| "success"), `message` | Alert with daisyUI `alert` component. |
+
+**Inline vs. separate file rule:**
+- `StatusCard` and `MetricCard` — inline in `DashboardView.tsx` (small, single consumer)
+- `JobDetail` panel — inline in `JobsView.tsx` (only used by JobsView, moderate complexity)
+- Everything else — own file
+
 ### What's removed
 - Entire `styles.css` (461 lines)
 - All CSS custom properties (colors handled by daisyUI theme)
