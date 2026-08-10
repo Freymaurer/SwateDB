@@ -5,7 +5,8 @@ WORKDIR /build/java-parser
 COPY packages/java-parser/pom.xml ./pom.xml
 COPY packages/java-parser/src ./src
 
-RUN mvn -q clean package -DskipTests
+RUN mvn -q clean package -DskipTests \
+    && mv /build/java-parser/target/java-parser-*-all.jar /build/java-parser/target/java-parser-all.jar
 
 FROM node:20-alpine AS deps
 
@@ -19,9 +20,10 @@ FROM deps AS dev
 
 RUN apk add --no-cache openjdk17-jre-headless ca-certificates
 
-COPY --from=parser-build /build/java-parser/target/java-parser-0.1.0-all.jar /opt/swatedb/java-parser.jar
+COPY --from=parser-build /build/java-parser/target/java-parser-all.jar /opt/swatedb/java-parser.jar
 
 ENV JAVA_BRIDGE_JAR_PATH=/opt/swatedb/java-parser.jar
+ENV JAVA_HOME=/usr/lib/jvm/java-17-openjdk
 
 WORKDIR /app
 
@@ -41,6 +43,7 @@ WORKDIR /app
 ENV NODE_ENV=production
 ENV PORT=3000
 ENV JAVA_BRIDGE_JAR_PATH=/opt/swatedb/java-parser.jar
+ENV JAVA_HOME=/usr/lib/jvm/java-17-openjdk
 
 RUN apk add --no-cache openjdk17-jre-headless ca-certificates
 
@@ -56,7 +59,7 @@ RUN npm ci --omit=dev --workspace=@swatedb/ontology-lib --workspace=@swatedb/bac
 COPY --from=build /app/packages/ontology-lib/dist ./packages/ontology-lib/dist
 COPY --from=build /app/packages/backend/dist ./packages/backend/dist
 COPY --from=build /app/openapi.yaml ./openapi.yaml
-COPY --from=parser-build /build/java-parser/target/java-parser-0.1.0-all.jar /opt/swatedb/java-parser.jar
+COPY --from=parser-build /build/java-parser/target/java-parser-all.jar /opt/swatedb/java-parser.jar
 
 WORKDIR /app/packages/backend
 

@@ -148,13 +148,46 @@ export async function startImportWorker(
 			await job.updateProgress(100);
 			return result;
 		},
-		{
-			connection: queueResources.redis,
-			concurrency,
-		},
-	);
+    {
+      connection: queueResources.redis,
+      concurrency,
+      lockDuration: 60_000,
+      stalledInterval: 15_000,
+      maxStalledCount: 3,
+    },
+  );
 
-	return sharedWorker;
+  sharedWorker.on('error', (error) => {
+    if (error instanceof Error) {
+      console.error(`[import-worker] Worker error: ${error.message}`, error.stack);
+    } else {
+      console.error(`[import-worker] Worker error: ${String(error)}`);
+    }
+  });
+
+  sharedWorker.on('failed', (job, error) => {
+    const jobId = job?.id ?? 'unknown';
+    const message = error instanceof Error ? error.message : String(error);
+    console.error(`[import-worker] Job ${String(jobId)} failed: ${message}`);
+  });
+
+  sharedWorker.on('stalled', (jobId) => {
+    console.warn(`[import-worker] Job ${String(jobId)} stalled — will be retried`);
+  });
+
+  void (async () => {
+    try {
+      const activeJobs = await queueResources.queue.getActive();
+      for (const job of activeJobs) {
+        console.warn(`[import-worker] Moving stale active job ${String(job.id)} back to waiting`);
+        await job.moveToWait();
+      }
+    } catch (error) {
+      console.warn('[import-worker] Could not clean up stale active jobs', error);
+    }
+  })();
+
+  return sharedWorker;
 }
 
 export async function stopImportWorker(): Promise<void> {

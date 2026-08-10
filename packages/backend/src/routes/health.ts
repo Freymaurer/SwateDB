@@ -1,6 +1,6 @@
 import { existsSync } from 'node:fs';
-import { spawnSync } from 'node:child_process';
 import { Router } from 'express';
+import { ensureJvm } from '@swatedb/ontology-lib';
 import { checkNeo4jHealth, type Neo4jHealthStatus } from '../db/neo4j';
 import { checkRedisHealth, type RedisHealthStatus } from '../services/job-queue';
 
@@ -58,35 +58,42 @@ export function createHealthRouter(options: HealthRouteOptions = {}): Router {
 	return router;
 }
 
-export function checkJvmHealth(env: NodeJS.ProcessEnv = process.env): HealthStatus {
-	const javaAvailable = spawnSync('java', ['-version'], {
-		stdio: 'ignore',
-		shell: process.platform === 'win32',
-	}).status === 0;
+let jvmHealthCache: HealthStatus | null = null;
 
-	if (!javaAvailable) {
-		return {
-			status: 'down',
-			detail: 'Java runtime is not available on PATH.',
-		};
-	}
+export function checkJvmHealth(): HealthStatus {
+  if (jvmHealthCache !== null) {
+    return jvmHealthCache;
+  }
 
-	const jarPath = env.JAVA_BRIDGE_JAR_PATH;
-	if (jarPath === undefined || jarPath.trim().length === 0) {
-		return {
-			status: 'down',
-			detail: 'JAVA_BRIDGE_JAR_PATH is not configured.',
-		};
-	}
+  const jarPath = process.env.JAVA_BRIDGE_JAR_PATH;
+  if (jarPath === undefined || jarPath.trim().length === 0) {
+    jvmHealthCache = {
+      status: 'down',
+      detail: 'JAVA_BRIDGE_JAR_PATH is not configured.',
+    };
+    return jvmHealthCache;
+  }
 
-	if (!existsSync(jarPath)) {
-		return {
-			status: 'down',
-			detail: `Configured parser JAR does not exist: ${jarPath}`,
-		};
-	}
+  if (!existsSync(jarPath)) {
+    jvmHealthCache = {
+      status: 'down',
+      detail: `Configured parser JAR does not exist: ${jarPath}`,
+    };
+    return jvmHealthCache;
+  }
 
-	return { status: 'up' };
+  try {
+    ensureJvm();
+    jvmHealthCache = { status: 'up' };
+  } catch (error) {
+    const detail = error instanceof Error ? error.message : String(error);
+    jvmHealthCache = {
+      status: 'down',
+      detail: `JVM bridge initialization failed: ${detail}`,
+    };
+  }
+
+  return jvmHealthCache;
 }
 
 async function guardProbe(probe: HealthProbe): Promise<HealthStatus> {

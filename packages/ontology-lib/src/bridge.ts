@@ -29,7 +29,24 @@ export function initJvm(jarPath: string): void {
   parserClass = null;
 }
 
-export function ensureJvm(): void {
+export interface JvmInitOptions {
+  javaHome?: string;
+  jvmOpts?: string[];
+}
+
+function resolveJavaLibPath(javaHome: string): string {
+  if (process.platform === 'win32') {
+    return path.join(javaHome, 'bin', 'server', 'jvm.dll');
+  }
+  if (process.platform === 'darwin') {
+    return path.join(javaHome, 'lib', 'server', 'libjvm.dylib');
+  }
+  return path.join(javaHome, 'lib', 'server', 'libjvm.so');
+}
+
+const DEFAULT_JVM_OPTS = ['-Xms128m', '-Xmx512m'];
+
+export function ensureJvm(options: JvmInitOptions = {}): void {
   const jarPath = resolveJarPath();
 
   if (!classpathInitialized) {
@@ -38,7 +55,16 @@ export function ensureJvm(): void {
   }
 
   if (!jvmInitialized) {
-    ensureJavaJvm();
+    const javaHome = options.javaHome ?? process.env.JAVA_HOME ?? undefined;
+    const libPath = javaHome !== undefined ? resolveJavaLibPath(javaHome) : undefined;
+    const opts = options.jvmOpts ?? DEFAULT_JVM_OPTS;
+
+    ensureJavaJvm({
+      libPath: libPath ?? undefined,
+      version: undefined,
+      opts,
+    });
+
     jvmInitialized = true;
   }
 
@@ -52,7 +78,12 @@ export async function parseOntologyFile(filePath: string): Promise<Ontology> {
     throw new ParserError('Ontology file path is required.');
   }
 
-  ensureJvm();
+  try {
+    ensureJvm();
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    throw new ParserError(`Failed to initialize JVM: ${message}`, error);
+  }
 
   if (parserClass === null) {
     throw new ParserError('Ontology parser class could not be initialized.');

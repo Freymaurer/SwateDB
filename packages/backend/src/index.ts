@@ -6,12 +6,13 @@ import express, { type Express } from 'express';
 import helmet from 'helmet';
 import pino from 'pino';
 import {
-	checkNeo4jHealth,
-	closeNeo4jDriver,
-	getNeo4jDriver,
-	verifyNeo4jConnectivity,
+  checkNeo4jHealth,
+  closeNeo4jDriver,
+  getNeo4jDriver,
+  verifyNeo4jConnectivity,
 } from './db/neo4j';
 import { ensureSchema } from './db/schema';
+import { ensureJvm } from '@swatedb/ontology-lib';
 import { errorHandler, notFoundHandler } from './middleware/error-handler';
 import { createAdminRouter } from './routes/admin';
 import { createHealthRouter, type HealthRouteOptions } from './routes/health';
@@ -95,10 +96,20 @@ export async function startServer(options: StartServerOptions = {}): Promise<App
 	const port = options.port ?? resolvePort();
 
 	const driver = getNeo4jDriver();
-	await verifyNeo4jConnectivity(driver);
-	await ensureSchema(driver);
+  await verifyNeo4jConnectivity(driver);
+  await ensureSchema(driver);
 
-	const queueResources = await initializeQueueResources();
+  logger.info('Initializing JVM for ontology parsing...');
+  try {
+    ensureJvm();
+    logger.info('JVM initialized successfully');
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    logger.error({ err: error }, `JVM initialization failed: ${message}`);
+    throw new Error(`JVM initialization failed: ${message}`);
+  }
+
+  const queueResources = await initializeQueueResources();
 	const importService = createImportService();
 
 	await startImportWorker((data, reportProgress) => importService.processImportJob(data, reportProgress), {
