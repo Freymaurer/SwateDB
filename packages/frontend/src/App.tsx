@@ -1,11 +1,13 @@
 import type { FormEvent } from 'react';
 import { useEffect, useMemo, useState } from 'react';
 import {
+  getConfiguredRepos,
   getDbStats,
   getHealth,
-  getJob,
   getJobs,
+  triggerConfiguredSync,
   triggerSync,
+  type ConfiguredRepoPublic,
   type DbStats,
   type HealthResponse,
   type JobSummary,
@@ -13,6 +15,7 @@ import {
 import { DashboardView } from './components/DashboardView';
 import { JobsView } from './components/JobsView';
 import { SyncView, type SyncFormState } from './components/SyncView';
+import { useJobEvents } from './lib/sse';
 import { TokenModal } from './components/TokenModal';
 import { isAuthError, toErrorMessage, toTokenPromptMessage } from './lib/errors';
 import { readStoredToken, storeToken } from './lib/token';
@@ -32,8 +35,8 @@ export function App(): JSX.Element {
   const [health, setHealth] = useState<HealthResponse | null>(null);
   const [dbStats, setDbStats] = useState<DbStats | null>(null);
   const [jobs, setJobs] = useState<JobSummary[]>([]);
+  const [configuredRepos, setConfiguredRepos] = useState<ConfiguredRepoPublic[]>([]);
   const [selectedJobId, setSelectedJobId] = useState<string | null>(null);
-  const [selectedJob, setSelectedJob] = useState<JobSummary | null>(null);
 
   const [syncForm, setSyncForm] = useState<SyncFormState>({
     owner: '',
@@ -53,40 +56,24 @@ export function App(): JSX.Element {
     if (showTokenPrompt) {
       return;
     }
-
     void refreshDashboard();
-
-    const timer = setInterval(() => {
-      void refreshDashboard(false);
-    }, 15_000);
-
-    return () => {
-      clearInterval(timer);
-    };
   }, [showTokenPrompt, token]);
 
-  useEffect(() => {
-    if (selectedJobId === null || token.trim().length === 0) {
-      setSelectedJob(null);
-      return;
-    }
-
-    void (async () => {
-      try {
-        const job = await getJob(token, selectedJobId);
-        setSelectedJob(job);
-      } catch (error) {
-        if (isAuthError(error)) {
-          clearToken({
-            clearDraft: false,
-            tokenPromptMessage: toTokenPromptMessage(error),
-          });
-          return;
+  useJobEvents({
+    enabled: !showTokenPrompt,
+    onJobUpdated: (job) => {
+      console.log('Received job-updated event for job', job.id, 'state', job.state);
+      setJobs((prev) => {
+        const index = prev.findIndex((entry) => entry.id === job.id);
+        if (index === -1) {
+          return [job, ...prev];
         }
-        setErrorMessage(toErrorMessage(error));
-      }
-    })();
-  }, [selectedJobId, token]);
+        const next = [...prev];
+        next[index] = job;
+        return next;
+      });
+    },
+  });
 
   const stats = useMemo(() => {
     const total = jobs.length;
@@ -109,19 +96,16 @@ export function App(): JSX.Element {
     setErrorMessage(null);
 
     try {
-      const [nextHealth, nextJobs, nextDbStats] = await Promise.all([
+      const [nextHealth, nextJobs, nextDbStats, nextRepos] = await Promise.all([
         getHealth(),
         getJobs(token, 100),
         getDbStats(),
+        getConfiguredRepos(token),
       ]);
       setHealth(nextHealth);
       setJobs(nextJobs);
       setDbStats(nextDbStats);
-
-      if (selectedJobId !== null) {
-        const job = nextJobs.find((entry) => entry.id === selectedJobId) ?? null;
-        setSelectedJob(job);
-      }
+      setConfiguredRepos(nextRepos);
     } catch (error) {
       if (isAuthError(error)) {
         clearToken({
@@ -156,7 +140,6 @@ export function App(): JSX.Element {
       setTokenDraft('');
     }
     setSelectedJobId(null);
-    setSelectedJob(null);
     setTokenErrorMessage(tokenPromptMessage);
   }
 
@@ -185,6 +168,34 @@ export function App(): JSX.Element {
         ref: syncForm.ref.trim(),
         installationId,
       });
+
+      setSyncMessage(
+        `Queued job ${queued.jobId}. Matched files: ${queued.matchedFiles}. External ontologies: ${queued.externals}.`,
+      );
+      await refreshDashboard(false);
+      setView('jobs');
+      setSelectedJobId(queued.jobId);
+    } catch (error) {
+      if (isAuthError(error)) {
+        clearToken({
+          clearDraft: false,
+          tokenPromptMessage: toTokenPromptMessage(error),
+        });
+        return;
+      }
+      setErrorMessage(toErrorMessage(error));
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function onConfiguredSync(index: number, ref: string): Promise<void> {
+    setBusy(true);
+    setErrorMessage(null);
+    setSyncMessage(null);
+
+    try {
+      const queued = await triggerConfiguredSync(token, { index, ref });
 
       setSyncMessage(
         `Queued job ${queued.jobId}. Matched files: ${queued.matchedFiles}. External ontologies: ${queued.externals}.`,
@@ -272,7 +283,6 @@ export function App(): JSX.Element {
           <JobsView
             jobs={jobs}
             selectedJobId={selectedJobId}
-            selectedJob={selectedJob}
             onSelectJob={setSelectedJobId}
           />
         ) : null}
@@ -281,6 +291,8 @@ export function App(): JSX.Element {
             syncForm={syncForm}
             onSyncFormChange={setSyncForm}
             onSubmit={(event) => void onSubmitSync(event)}
+            configuredRepos={configuredRepos}
+            onConfiguredSync={(index, ref) => void onConfiguredSync(index, ref)}
             busy={busy}
           />
         ) : null}

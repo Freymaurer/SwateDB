@@ -30,6 +30,25 @@ export function createArtefactsRouter(
 ): Router {
 	const router = Router();
 
+	/**
+	 * @openapi
+	 * /artefacts:
+	 *   get:
+	 *     tags:
+	 *       - Artefact
+	 *     summary: Get information about all semantic artefacts
+	 *     operationId: getArtefacts
+	 *     parameters:
+	 *       - $ref: '#/components/parameters/format_param'
+	 *       - $ref: '#/components/parameters/page'
+	 *       - $ref: '#/components/parameters/pagesize'
+	 *       - $ref: '#/components/parameters/displaySemanticArtefact'
+	 *     responses:
+	 *       '200':
+	 *         $ref: '#/components/responses/artefacts'
+	 *       '404':
+	 *         $ref: '#/components/responses/error_message'
+	 */
 	router.get('/', async (request, response, next) => {
 		try {
 			const query = parseCollectionQuery(request);
@@ -61,6 +80,24 @@ export function createArtefactsRouter(
 		}
 	});
 
+	/**
+	 * @openapi
+	 * /artefacts/{artefactID}:
+	 *   get:
+	 *     tags:
+	 *       - Artefact
+	 *     summary: Get information about a semantic artefact
+	 *     operationId: getArtefact
+	 *     parameters:
+	 *       - $ref: '#/components/parameters/artefactID'
+	 *       - $ref: '#/components/parameters/format_param'
+	 *       - $ref: '#/components/parameters/displaySemanticArtefact'
+	 *     responses:
+	 *       '200':
+	 *         $ref: '#/components/responses/artefact'
+	 *       '404':
+	 *         $ref: '#/components/responses/error_message'
+	 */
 	router.get('/:artefactID', async (request, response, next) => {
 		try {
 			const artefactId = requirePathParam(request, 'artefactID');
@@ -85,6 +122,26 @@ export function createArtefactsRouter(
 		}
 	});
 
+	/**
+	 * @openapi
+	 * /artefacts/{artefactID}/distributions:
+	 *   get:
+	 *     tags:
+	 *       - Artefact
+	 *     summary: Get information about a semantic artefact's distributions
+	 *     operationId: getArtefactDistributions
+	 *     parameters:
+	 *       - $ref: '#/components/parameters/artefactID'
+	 *       - $ref: '#/components/parameters/format_param'
+	 *       - $ref: '#/components/parameters/page'
+	 *       - $ref: '#/components/parameters/pagesize'
+	 *       - $ref: '#/components/parameters/display'
+	 *     responses:
+	 *       '200':
+	 *         $ref: '#/components/responses/distributions'
+	 *       '404':
+	 *         $ref: '#/components/responses/error_message'
+	 */
 	router.get('/:artefactID/distributions', async (request, response, next) => {
 		try {
 			const artefactId = requirePathParam(request, 'artefactID');
@@ -121,6 +178,24 @@ export function createArtefactsRouter(
 		}
 	});
 
+	/**
+	 * @openapi
+	 * /artefacts/{artefactID}/distributions/latest:
+	 *   get:
+	 *     tags:
+	 *       - Artefact
+	 *     summary: Get information about a semantic artefact's latest distribution
+	 *     operationId: getArtefactDistributionsLatest
+	 *     parameters:
+	 *       - $ref: '#/components/parameters/artefactID'
+	 *       - $ref: '#/components/parameters/format_param'
+	 *       - $ref: '#/components/parameters/display'
+	 *     responses:
+	 *       '200':
+	 *         $ref: '#/components/responses/distribution'
+	 *       '404':
+	 *         $ref: '#/components/responses/error_message'
+	 */
 	router.get('/:artefactID/distributions/latest', async (request, response, next) => {
 		try {
 			const artefactId = requirePathParam(request, 'artefactID');
@@ -145,6 +220,25 @@ export function createArtefactsRouter(
 		}
 	});
 
+	/**
+	 * @openapi
+	 * /artefacts/{artefactID}/distributions/{distributionID}:
+	 *   get:
+	 *     tags:
+	 *       - Artefact
+	 *     summary: Get information about a semantic artefact's distribution
+	 *     operationId: getArtefactDistribution
+	 *     parameters:
+	 *       - $ref: '#/components/parameters/artefactID'
+	 *       - $ref: '#/components/parameters/distributionID'
+	 *       - $ref: '#/components/parameters/format_param'
+	 *       - $ref: '#/components/parameters/display'
+	 *     responses:
+	 *       '200':
+	 *         $ref: '#/components/responses/distribution'
+	 *       '404':
+	 *         $ref: '#/components/responses/error_message'
+	 */
 	router.get('/:artefactID/distributions/:distributionID', async (request, response, next) => {
 		try {
 			const artefactId = requirePathParam(request, 'artefactID');
@@ -175,6 +269,24 @@ export function createArtefactsRouter(
 		}
 	});
 
+	/**
+	 * @openapi
+	 * /artefacts/{artefactID}/record:
+	 *   get:
+	 *     tags:
+	 *       - Artefact
+	 *     summary: Get information about a semantic artefact catalog record
+	 *     operationId: getArtefactRecord
+	 *     parameters:
+	 *       - $ref: '#/components/parameters/artefactID'
+	 *       - $ref: '#/components/parameters/format_param'
+	 *       - $ref: '#/components/parameters/display'
+	 *     responses:
+	 *       '200':
+	 *         $ref: '#/components/responses/record'
+	 *       '404':
+	 *         $ref: '#/components/responses/error_message'
+	 */
 	router.get('/:artefactID/record', async (request, response, next) => {
 		try {
 			const artefactId = requirePathParam(request, 'artefactID');
@@ -203,38 +315,208 @@ export function createArtefactsRouter(
 		}
 	});
 
+	/**
+	 * @openapi
+	 * /artefacts/{artefactID}/resources:
+	 *   get:
+	 *     tags:
+	 *       - Artefact
+	 *     summary: Get a list of all the resources within an artefact
+	 *     operationId: getArtefactResources
+	 *     parameters:
+	 *       - $ref: '#/components/parameters/artefactID'
+	 *       - $ref: '#/components/parameters/format_param'
+	 *       - $ref: '#/components/parameters/page'
+	 *       - $ref: '#/components/parameters/pagesize'
+	 *     responses:
+	 *       '200':
+	 *         $ref: '#/components/responses/resources'
+	 *       '404':
+	 *         $ref: '#/components/responses/error_message'
+	 */
 	router.get('/:artefactID/resources', async (request, response, next) => {
 		await respondResourceCollection(service, request, response, next, 'owl:Class');
 	});
 
+	/**
+	 * @openapi
+	 * /artefacts/{artefactID}/resources/classes:
+	 *   get:
+	 *     tags:
+	 *       - Artefact
+	 *     summary: Get a list of all owl:Classes within an artefact
+	 *     operationId: getArtefactClasses
+	 *     parameters:
+	 *       - $ref: '#/components/parameters/artefactID'
+	 *       - $ref: '#/components/parameters/format_param'
+	 *       - $ref: '#/components/parameters/page'
+	 *       - $ref: '#/components/parameters/pagesize'
+	 *     responses:
+	 *       '200':
+	 *         $ref: '#/components/responses/classes'
+	 *       '404':
+	 *         $ref: '#/components/responses/error_message'
+	 */
 	router.get('/:artefactID/resources/classes', async (request, response, next) => {
 		await respondResourceCollection(service, request, response, next, 'owl:Class');
 	});
 
+	/**
+	 * @openapi
+	 * /artefacts/{artefactID}/resources/concepts:
+	 *   get:
+	 *     tags:
+	 *       - Artefact
+	 *     summary: Get a list of all skos:Concept within an artefact
+	 *     operationId: getArtefactConcepts
+	 *     parameters:
+	 *       - $ref: '#/components/parameters/artefactID'
+	 *       - $ref: '#/components/parameters/format_param'
+	 *       - $ref: '#/components/parameters/page'
+	 *       - $ref: '#/components/parameters/pagesize'
+	 *     responses:
+	 *       '200':
+	 *         $ref: '#/components/responses/concepts'
+	 *       '404':
+	 *         $ref: '#/components/responses/error_message'
+	 */
 	router.get('/:artefactID/resources/concepts', async (request, response, next) => {
 		await respondResourceCollection(service, request, response, next, 'skos:Concept');
 	});
 
+	/**
+	 * @openapi
+	 * /artefacts/{artefactID}/resources/properties:
+	 *   get:
+	 *     tags:
+	 *       - Artefact
+	 *     summary: Get a list of all the rdf:Property within an artefact
+	 *     operationId: getArtefactProperties
+	 *     parameters:
+	 *       - $ref: '#/components/parameters/artefactID'
+	 *       - $ref: '#/components/parameters/format_param'
+	 *       - $ref: '#/components/parameters/page'
+	 *       - $ref: '#/components/parameters/pagesize'
+	 *     responses:
+	 *       '200':
+	 *         $ref: '#/components/responses/properties'
+	 *       '404':
+	 *         $ref: '#/components/responses/error_message'
+	 */
 	router.get('/:artefactID/resources/properties', async (request, response, next) => {
 		await respondResourceCollection(service, request, response, next, 'rdf:Property');
 	});
 
+	/**
+	 * @openapi
+	 * /artefacts/{artefactID}/resources/individuals:
+	 *   get:
+	 *     tags:
+	 *       - Artefact
+	 *     summary: Get a list of all the instances (owl named individual) within an artefact
+	 *     operationId: getArtefactIndividuals
+	 *     parameters:
+	 *       - $ref: '#/components/parameters/artefactID'
+	 *       - $ref: '#/components/parameters/format_param'
+	 *       - $ref: '#/components/parameters/page'
+	 *       - $ref: '#/components/parameters/pagesize'
+	 *     responses:
+	 *       '200':
+	 *         $ref: '#/components/responses/individuals'
+	 *       '404':
+	 *         $ref: '#/components/responses/error_message'
+	 */
 	router.get('/:artefactID/resources/individuals', async (request, response, next) => {
 		await respondResourceCollection(service, request, response, next, 'owl:NamedIndividual');
 	});
 
+	/**
+	 * @openapi
+	 * /artefacts/{artefactID}/resources/schemes:
+	 *   get:
+	 *     tags:
+	 *       - Artefact
+	 *     summary: Get a list of all the skos:ConceptScheme within an artefact
+	 *     operationId: getArtefactSchemes
+	 *     parameters:
+	 *       - $ref: '#/components/parameters/artefactID'
+	 *       - $ref: '#/components/parameters/format_param'
+	 *       - $ref: '#/components/parameters/page'
+	 *       - $ref: '#/components/parameters/pagesize'
+	 *     responses:
+	 *       '200':
+	 *         $ref: '#/components/responses/schemes'
+	 *       '404':
+	 *         $ref: '#/components/responses/error_message'
+	 */
 	router.get('/:artefactID/resources/schemes', async (request, response, next) => {
 		await respondResourceCollection(service, request, response, next, 'skos:ConceptScheme');
 	});
 
+	/**
+	 * @openapi
+	 * /artefacts/{artefactID}/resources/collections:
+	 *   get:
+	 *     tags:
+	 *       - Artefact
+	 *     summary: Get a list of all the skos:Collection within an artefact
+	 *     operationId: getArtefactCollections
+	 *     parameters:
+	 *       - $ref: '#/components/parameters/artefactID'
+	 *       - $ref: '#/components/parameters/format_param'
+	 *       - $ref: '#/components/parameters/page'
+	 *       - $ref: '#/components/parameters/pagesize'
+	 *     responses:
+	 *       '200':
+	 *         $ref: '#/components/responses/collections'
+	 *       '404':
+	 *         $ref: '#/components/responses/error_message'
+	 */
 	router.get('/:artefactID/resources/collections', async (request, response, next) => {
 		await respondResourceCollection(service, request, response, next, 'skos:Collection');
 	});
 
+	/**
+	 * @openapi
+	 * /artefacts/{artefactID}/resources/labels:
+	 *   get:
+	 *     tags:
+	 *       - Artefact
+	 *     summary: Get a list of all the skos-xl:Label within an artefact
+	 *     operationId: getArtefactLabels
+	 *     parameters:
+	 *       - $ref: '#/components/parameters/artefactID'
+	 *       - $ref: '#/components/parameters/format_param'
+	 *       - $ref: '#/components/parameters/page'
+	 *       - $ref: '#/components/parameters/pagesize'
+	 *     responses:
+	 *       '200':
+	 *         $ref: '#/components/responses/resources'
+	 *       '404':
+	 *         $ref: '#/components/responses/error_message'
+	 */
 	router.get('/:artefactID/resources/labels', async (request, response, next) => {
 		await respondResourceCollection(service, request, response, next, 'skosxl:Label');
 	});
 
+	/**
+	 * @openapi
+	 * /artefacts/{artefactID}/resources/{resourceID}:
+	 *   get:
+	 *     tags:
+	 *       - Artefact
+	 *     summary: Get a specific resource from within an artefact
+	 *     operationId: getArtefactResource
+	 *     parameters:
+	 *       - $ref: '#/components/parameters/artefactID'
+	 *       - $ref: '#/components/parameters/resourceID'
+	 *       - $ref: '#/components/parameters/format_param'
+	 *     responses:
+	 *       '200':
+	 *         $ref: '#/components/responses/resource'
+	 *       '404':
+	 *         $ref: '#/components/responses/error_message'
+	 */
 	router.get('/:artefactID/resources/:resourceID', async (request, response, next) => {
 		try {
 			const artefactId = requirePathParam(request, 'artefactID');

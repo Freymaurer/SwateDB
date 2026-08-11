@@ -134,6 +134,9 @@ export function createApp(options: CreateAppOptions = {}): Express {
 export async function startServer(options: StartServerOptions = {}): Promise<AppRuntime> {
 	const port = options.port ?? resolvePort();
 
+	const configuredKeys = Object.keys(process.env).filter((k) => k.startsWith('CONFIGURED_'));
+	logger.info({ keys: configuredKeys }, `CONFIGURED_* env vars found: ${configuredKeys.length}`);
+
 	const driver = getNeo4jDriver();
   await verifyNeo4jConnectivity(driver);
   await ensureSchema(driver);

@@ -12,6 +12,25 @@ const recordsContext = {
 export function createRecordsRouter(service: Pick<ModApiService, 'listRecords' | 'getRecord'>): Router {
 	const router = Router();
 
+	/**
+	 * @openapi
+	 * /records:
+	 *   get:
+	 *     tags:
+	 *       - Record
+	 *     summary: Get information about all semantic artefact catalog records
+	 *     operationId: getCatalogueRecords
+	 *     parameters:
+	 *       - $ref: '#/components/parameters/format_param'
+	 *       - $ref: '#/components/parameters/page'
+	 *       - $ref: '#/components/parameters/pagesize'
+	 *       - $ref: '#/components/parameters/displaySemanticArtefactCatalogRecord'
+	 *     responses:
+	 *       '200':
+	 *         $ref: '#/components/responses/records'
+	 *       '404':
+	 *         $ref: '#/components/responses/error_message'
+	 */
 	router.get('/', async (request, response, next) => {
 		try {
 			const query = parseCollectionQuery(request);
@@ -43,6 +62,24 @@ export function createRecordsRouter(service: Pick<ModApiService, 'listRecords' |
 		}
 	});
 
+	/**
+	 * @openapi
+	 * /records/{artefactID}:
+	 *   get:
+	 *     tags:
+	 *       - Record
+	 *     summary: Get information about a semantic artefact catalog record
+	 *     operationId: getRecord
+	 *     parameters:
+	 *       - $ref: '#/components/parameters/artefactID'
+	 *       - $ref: '#/components/parameters/format_param'
+	 *       - $ref: '#/components/parameters/displaySemanticArtefactCatalogRecord'
+	 *     responses:
+	 *       '200':
+	 *         $ref: '#/components/responses/record'
+	 *       '404':
+	 *         $ref: '#/components/responses/error_message'
+	 */
 	router.get('/:artefactID', async (request, response, next) => {
 		try {
 			const query = parseCollectionQuery(request);

@@ -11,6 +11,21 @@ const catalogueContext = {
 export function createCatalogueRouter(service: Pick<ModApiService, 'getCatalogue'>): Router {
 	const router = Router();
 
+	/**
+	 * @openapi
+	 * /:
+	 *   get:
+	 *     tags:
+	 *       - Catalogue
+	 *     summary: Get information about the semantic artefact catalogue
+	 *     operationId: catalogue
+	 *     parameters:
+	 *       - $ref: '#/components/parameters/format_param'
+	 *       - $ref: '#/components/parameters/displaySemanticArtefactCatalog'
+	 *     responses:
+	 *       '200':
+	 *         $ref: '#/components/responses/catalog'
+	 */
 	router.get('/', async (request, response, next) => {
 		try {
 			const query = parseCollectionQuery(request);

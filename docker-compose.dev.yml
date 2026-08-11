@@ -13,7 +13,7 @@ services:
     volumes:
       - ./packages/backend:/app/packages/backend
       - ./packages/ontology-lib:/app/packages/ontology-lib
-      - ./openapi.yaml:/app/openapi.yaml:ro
+      - ./docs/openapi.yaml:/app/docs/openapi.yaml:ro
     ports:
       - "9229:9229"
 

@@ -28,6 +28,11 @@ export function TokenModal({ tokenDraft, onTokenDraftChange, onSave, errorMessag
             className="input input-bordered w-full"
             value={tokenDraft}
             onChange={(e) => onTokenDraftChange(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') {
+                onSave();
+              }
+            }}
             placeholder="paste ADMIN_TOKEN"
           />
         </label>

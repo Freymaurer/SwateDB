@@ -54,7 +54,7 @@ Status: Phase 3a + 3b + 3c + 3d + 7 implemented.
 	- /search
 	- /search/content
 	- /search/metadata
-- Swagger UI is exposed at /doc/api from root openapi.yaml.
+- Swagger UI is served at /doc/api with auto-generated OpenAPI spec from @openapi JSDoc annotations on route handlers.
 - Format/query helpers added for format/display/page/pagesize/q parsing.
 - JSON-LD response helpers with Hydra pagination view fields.
 - Runtime 406 handling for recognized but unsupported formats (ttl, rdfxml).
@@ -63,7 +63,7 @@ Status: Phase 3a + 3b + 3c + 3d + 7 implemented.
 ## Implemented in Phase 3d
 
 - Dedicated backend contract test suite command: `npm run test:contract`.
-- OpenAPI drift gate that compares backend endpoint coverage against `openapi.yaml` path definitions.
+- OpenAPI drift gate that compares auto-generated endpoint coverage against `docs/openapi.yaml` reference path definitions.
 - Snapshot fixtures for representative JSON-LD responses (`artefacts` collection and `search` collection).
 - CI contract-gate job that fails on route coverage drift, schema mismatch, or snapshot mismatch.
 

@@ -8,13 +8,16 @@ const STATUS_OPTIONS: string[] = ['all', 'active', 'waiting', 'completed', 'fail
 interface JobsViewProps {
   jobs: JobSummary[];
   selectedJobId: string | null;
-  selectedJob: JobSummary | null;
   onSelectJob: (id: string) => void;
 }
 
-export function JobsView({ jobs, selectedJobId, selectedJob, onSelectJob }: JobsViewProps): JSX.Element {
+export function JobsView({ jobs, selectedJobId, onSelectJob }: JobsViewProps): JSX.Element {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
+  const selectedJob = useMemo(
+    () => jobs.find((entry) => entry.id === selectedJobId) ?? null,
+    [jobs, selectedJobId],
+  );
 
   const visibleJobs = useMemo(() => {
     const lowerSearch = searchTerm.toLowerCase().trim();
@@ -39,29 +42,29 @@ export function JobsView({ jobs, selectedJobId, selectedJob, onSelectJob }: Jobs
     <section>
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-4">
         <h2 className="text-xl font-bold">Import Log</h2>
-        <div className="flex items-center gap-2">
-          <input
-            className="input input-bordered input-sm w-full sm:w-48"
-            type="text"
-            placeholder="Filter jobs..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-          />
-          <select
-            className="select select-bordered select-sm"
-            value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value)}
-          >
-            {STATUS_OPTIONS.map((opt) => (
-              <option key={opt} value={opt}>
-                {opt === 'all' ? 'All statuses' : opt}
-              </option>
-            ))}
-          </select>
-        </div>
       </div>
       <div className="flex flex-col lg:flex-row gap-4 h-[calc(100vh-16rem)]">
-        <ul className="menu bg-base-200 rounded-box w-full lg:w-72 flex-shrink-0 overflow-y-auto">
+        <ul className="menu bg-base-200 rounded-box w-full lg:w-72 shrink overflow-y-auto">
+          <div className="flex items-center gap-2">
+            <input
+              className="input input-bordered input-sm w-full sm:w-48"
+              type="text"
+              placeholder="Filter jobs..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+            <select
+              className="select select-bordered select-sm"
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value)}
+            >
+              {STATUS_OPTIONS.map((opt) => (
+                <option key={opt} value={opt}>
+                  {opt === 'all' ? 'All statuses' : opt}
+                </option>
+              ))}
+            </select>
+          </div>
           {visibleJobs.map((job) => (
             <li key={job.id}>
               <a

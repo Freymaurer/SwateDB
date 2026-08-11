@@ -58,6 +58,7 @@ services:
       GITHUB_PRIVATE_KEY: ${GITHUB_PRIVATE_KEY:-}
       GITHUB_WEBHOOK_SECRET: ${GITHUB_WEBHOOK_SECRET:-local-webhook-secret}
       GITHUB_API_BASE_URL: ${GITHUB_API_BASE_URL:-https://api.github.com}
+      CONFIGURED_GITHUB_ONTOLOGY_REPOS: ${CONFIGURED_GITHUB_ONTOLOGY_REPOS:-}
     ports:
       - "3000:3000"
     healthcheck:

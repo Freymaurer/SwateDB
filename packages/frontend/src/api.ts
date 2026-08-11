@@ -37,11 +37,24 @@ export interface SyncRequest {
   installationId: number;
 }
 
+export interface SyncConfiguredRequest {
+  index: number;
+  ref?: string;
+}
+
 export interface SyncQueuedResponse {
   status: 'queued';
   jobId: string;
   matchedFiles: number;
   externals: number;
+}
+
+export interface ConfiguredRepoPublic {
+  index: number;
+  owner: string;
+  repo: string;
+  ref: string;
+  label?: string;
 }
 
 interface CollectionTotalsResponse {
@@ -94,6 +107,29 @@ export async function getJob(token: string, id: string): Promise<JobSummary> {
 
 export async function triggerSync(token: string, request: SyncRequest): Promise<SyncQueuedResponse> {
   return fetchJson<SyncQueuedResponse>('/api/admin/sync', {
+    method: 'POST',
+    headers: {
+      ...withAuthorization(token),
+      'content-type': 'application/json',
+    },
+    body: JSON.stringify(request),
+  });
+}
+
+export async function getConfiguredRepos(token: string): Promise<ConfiguredRepoPublic[]> {
+  const response = await fetchJson<{ repos: ConfiguredRepoPublic[] }>('/api/admin/configured-repos', {
+    method: 'GET',
+    headers: withAuthorization(token),
+  });
+
+  return response.repos;
+}
+
+export async function triggerConfiguredSync(
+  token: string,
+  request: SyncConfiguredRequest,
+): Promise<SyncQueuedResponse> {
+  return fetchJson<SyncQueuedResponse>('/api/admin/sync-configured', {
     method: 'POST',
     headers: {
       ...withAuthorization(token),

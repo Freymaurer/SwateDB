@@ -57,7 +57,7 @@ RUN npm ci --omit=dev --workspace=@swatedb/ontology-lib --workspace=@swatedb/bac
 
 COPY --from=build /app/packages/ontology-lib/dist ./packages/ontology-lib/dist
 COPY --from=build /app/packages/backend/dist ./packages/backend/dist
-COPY --from=build /app/openapi.yaml ./openapi.yaml
+COPY --from=build /app/docs/openapi.yaml ./docs/openapi.yaml
 COPY --from=parser-build /build/java-parser/target/java-parser-all.jar /opt/swatedb/java-parser.jar
 
 WORKDIR /app/packages/backend

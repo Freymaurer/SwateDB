@@ -372,7 +372,7 @@ Optional environment variables for smoke target overrides are listed in .env.exa
 
 - Keep package READMEs updated as functionality evolves.
 - Follow phase-gated implementation in [Plan.md](Plan.md).
-- Keep API intent aligned with [Microservice.md](Microservice.md) and [openapi.yaml](openapi.yaml).
+- Keep API intent aligned with [docs/Microservice.md](docs/Microservice.md) and [docs/openapi.yaml](docs/openapi.yaml).
 
 ## Contributing
 

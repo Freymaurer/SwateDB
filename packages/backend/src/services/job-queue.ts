@@ -2,6 +2,7 @@ import IORedis from 'ioredis';
 import { Job, Queue, Worker } from 'bullmq';
 import type { ImportJobData, ImportJobResult, JobSummary } from './import-types';
 import { getLogger } from '../middleware/request-logger';
+import { getSseBroker } from './sse-broker';
 
 const IMPORT_QUEUE_NAME = 'ontology-import-jobs';
 const DEFAULT_WORKER_CONCURRENCY = 2;
@@ -169,6 +170,11 @@ export async function startImportWorker(
 
   sharedWorker.on('failed', (job, error) => {
     const logger = getLogger();
+    if (job !== undefined) {
+      void summarizeJob(job).then((summary) => {
+        getSseBroker().broadcast('job-updated', summary);
+      });
+    }
     const jobId = job?.id ?? 'unknown';
     const message = error instanceof Error ? error.message : String(error);
     logger.error({ jobId: String(jobId), err: error }, `[import-worker] Job ${String(jobId)} failed: ${message}`);
@@ -176,6 +182,24 @@ export async function startImportWorker(
 
   sharedWorker.on('stalled', (jobId) => {
     getLogger().warn({ jobId: String(jobId) }, `[import-worker] Job ${String(jobId)} stalled — will be retried`);
+  });
+
+  sharedWorker.on('active', (job) => {
+    void summarizeJob(job).then((summary) => {
+      getSseBroker().broadcast('job-updated', summary);
+    });
+  });
+
+  sharedWorker.on('progress', (job) => {
+    void summarizeJob(job).then((summary) => {
+      getSseBroker().broadcast('job-updated', summary);
+    });
+  });
+
+  sharedWorker.on('completed', (job) => {
+    void summarizeJob(job).then((summary) => {
+      getSseBroker().broadcast('job-updated', summary);
+    });
   });
 
   void (async () => {
@@ -233,7 +257,7 @@ export function resetQueueResourcesForTests(): void {
 	sharedWorker = null;
 }
 
-async function summarizeJob(job: Job<ImportJobData, ImportJobResult, 'import-ontology'>): Promise<JobSummary> {
+export async function summarizeJob(job: Job<ImportJobData, ImportJobResult, 'import-ontology'>): Promise<JobSummary> {
   const state = await job.getState();
   const progress = typeof job.progress === 'number' ? job.progress : null;
 

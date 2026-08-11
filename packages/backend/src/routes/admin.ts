@@ -5,6 +5,9 @@ import { createAdminAuthMiddleware } from '../middleware/auth';
 import { HttpError } from '../middleware/error-handler';
 import { getImportJobById, listImportJobs } from '../services/job-queue';
 import type { ImportService } from '../services/import-service';
+import { getSseBroker } from '../services/sse-broker';
+import { getConfiguredRepoByIndex, getConfiguredReposPublic } from '../services/configured-repos';
+import { getLogger } from '../middleware/request-logger';
 
 const listJobsQuerySchema = z.object({
 	limit: z.coerce.number().int().positive().max(200).optional(),
@@ -26,6 +29,22 @@ export function createAdminRouter(options: AdminRouterOptions): Router {
 	const router = Router();
 	const auth = options.authMiddleware ?? createAdminAuthMiddleware();
 
+	router.get('/jobs/events', (request, response) => {
+		response.writeHead(200, {
+			'Content-Type': 'text/event-stream',
+			'Cache-Control': 'no-cache',
+			'Connection': 'keep-alive',
+			'X-Accel-Buffering': 'no',
+		});
+		response.write(':ok\n\n');
+
+		getSseBroker().addClient(response);
+
+		request.on('close', () => {
+			getSseBroker().removeClient(response);
+		});
+	});
+
 	router.use(auth);
 
 	router.post('/sync', async (request, response, next) => {
@@ -35,6 +54,48 @@ export function createAdminRouter(options: AdminRouterOptions): Router {
 
 			const queued = await options.importService.enqueueManualSync({
 				...parsed,
+				requestedBy,
+			});
+
+			response.status(202).json({
+				status: 'queued',
+				jobId: queued.jobId,
+				matchedFiles: queued.matchedFiles,
+				externals: queued.externals,
+			});
+		} catch (error) {
+			next(error);
+		}
+	});
+
+	router.get('/configured-repos', (_request, response) => {
+		const repos = getConfiguredReposPublic();
+		getLogger().info({ count: repos.length }, 'GET /api/admin/configured-repos');
+		response.status(200).json({ repos });
+	});
+
+	const syncConfiguredSchema = z.object({
+		index: z.number().int().min(0),
+		ref: z.string().min(1).optional(),
+	});
+
+	router.post('/sync-configured', async (request, response, next) => {
+		try {
+			const parsed = syncConfiguredSchema.parse(request.body);
+			const entry = getConfiguredRepoByIndex(parsed.index);
+
+			if (entry === undefined) {
+				throw new HttpError(400, 'invalid_index', `No configured repo at index ${parsed.index}`);
+			}
+
+			const requestedBy = request.header('x-swatedb-user') ?? undefined;
+			const ref = parsed.ref ?? entry.ref;
+
+			const queued = await options.importService.enqueueManualSync({
+				owner: entry.owner,
+				repo: entry.repo,
+				ref,
+				installationId: entry.installationId,
 				requestedBy,
 			});
 
