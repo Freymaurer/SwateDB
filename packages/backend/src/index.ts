@@ -91,7 +91,7 @@ export function createApp(options: CreateAppOptions = {}): Express {
 
 	return app;
 }
-
+  
 export async function startServer(options: StartServerOptions = {}): Promise<AppRuntime> {
 	const port = options.port ?? resolvePort();
 
@@ -99,14 +99,14 @@ export async function startServer(options: StartServerOptions = {}): Promise<App
   await verifyNeo4jConnectivity(driver);
   await ensureSchema(driver);
 
-  logger.info('Initializing JVM for ontology parsing...');
+  logger.info('Verifying JVM availability...');
   try {
     ensureJvm();
-    logger.info('JVM initialized successfully');
+    logger.info('JVM and parser JAR verified');
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
-    logger.error({ err: error }, `JVM initialization failed: ${message}`);
-    throw new Error(`JVM initialization failed: ${message}`);
+    logger.error({ err: error }, `JVM verification failed: ${message}`);
+    throw new Error(`JVM verification failed: ${message}`);
   }
 
   const queueResources = await initializeQueueResources();

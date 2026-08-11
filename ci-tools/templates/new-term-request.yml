@@ -1,0 +1,41 @@
+name: New Term Request
+description: Request a new term to be added to the ontology
+title: '[NEW TERM]: '
+labels: ['new term']
+body:
+  - type: input
+    id: term_name
+    attributes:
+      label: Term Name
+      description: The preferred name for the new term
+      placeholder: e.g. 'cell culture temperature'
+    validations:
+      required: true
+
+  - type: textarea
+    id: definition
+    attributes:
+      label: Definition
+      description: A clear, concise definition of the term
+      placeholder: 'The temperature at which a cell culture is maintained...'
+    validations:
+      required: true
+
+  - type: input
+    id: parent_term
+    attributes:
+      label: Parent Term
+      description: The suggested parent term (accession or name)
+      placeholder: e.g. 'DPBO:0000001'
+
+  - type: textarea
+    id: references
+    attributes:
+      label: References
+      description: Any supporting references, publications, or URLs
+
+  - type: textarea
+    id: justification
+    attributes:
+      label: Justification
+      description: Why is this term needed? How would it be used?

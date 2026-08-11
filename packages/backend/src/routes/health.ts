@@ -1,6 +1,6 @@
 import { existsSync } from 'node:fs';
+import { spawnSync } from 'node:child_process';
 import { Router } from 'express';
-import { ensureJvm } from '@swatedb/ontology-lib';
 import { checkNeo4jHealth, type Neo4jHealthStatus } from '../db/neo4j';
 import { checkRedisHealth, type RedisHealthStatus } from '../services/job-queue';
 
@@ -58,42 +58,35 @@ export function createHealthRouter(options: HealthRouteOptions = {}): Router {
 	return router;
 }
 
-let jvmHealthCache: HealthStatus | null = null;
+export function checkJvmHealth(env: NodeJS.ProcessEnv = process.env): HealthStatus {
+  const javaAvailable = spawnSync('java', ['-version'], {
+    stdio: 'ignore',
+    shell: process.platform === 'win32',
+  }).status === 0;
 
-export function checkJvmHealth(): HealthStatus {
-  if (jvmHealthCache !== null) {
-    return jvmHealthCache;
+  if (!javaAvailable) {
+    return {
+      status: 'down',
+      detail: 'Java runtime is not available on PATH.',
+    };
   }
 
-  const jarPath = process.env.JAVA_BRIDGE_JAR_PATH;
+  const jarPath = env.JAVA_BRIDGE_JAR_PATH;
   if (jarPath === undefined || jarPath.trim().length === 0) {
-    jvmHealthCache = {
+    return {
       status: 'down',
       detail: 'JAVA_BRIDGE_JAR_PATH is not configured.',
     };
-    return jvmHealthCache;
   }
 
   if (!existsSync(jarPath)) {
-    jvmHealthCache = {
+    return {
       status: 'down',
       detail: `Configured parser JAR does not exist: ${jarPath}`,
     };
-    return jvmHealthCache;
   }
 
-  try {
-    ensureJvm();
-    jvmHealthCache = { status: 'up' };
-  } catch (error) {
-    const detail = error instanceof Error ? error.message : String(error);
-    jvmHealthCache = {
-      status: 'down',
-      detail: `JVM bridge initialization failed: ${detail}`,
-    };
-  }
-
-  return jvmHealthCache;
+  return { status: 'up' };
 }
 
 async function guardProbe(probe: HealthProbe): Promise<HealthStatus> {

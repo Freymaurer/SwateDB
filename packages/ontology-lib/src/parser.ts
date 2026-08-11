@@ -61,7 +61,8 @@ export async function parseFromUrl(url: string, options: ParseFromUrlOptions = {
 
     tempDir = await mkdtemp(path.join(os.tmpdir(), 'swatedb-ontology-'));
     const extension = inferExtension(target.pathname);
-    const tempFile = path.join(tempDir, `download${extension}`);
+    const basename = path.basename(target.pathname);
+    const tempFile = path.join(tempDir, basename || `download${extension}`);
     await writeFile(tempFile, buffer);
 
     return parseFile(tempFile, options);

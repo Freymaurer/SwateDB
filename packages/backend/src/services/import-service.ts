@@ -2,15 +2,17 @@ import { mkdtemp, rm, writeFile } from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import {
-	matchesImportPatterns,
-	parseConfig,
-	parseFile,
-	parseFromUrl,
-	swateDbConfigSchema,
-	type Ontology,
-	type SwateDbConfig,
+  matchesImportPatterns,
+  parseConfig,
+  parseFile,
+  parseFromUrl,
+  ParserError,
+  swateDbConfigSchema,
+  type Ontology,
+  type SwateDbConfig,
 } from '@swatedb/ontology-lib';
 import { z } from 'zod';
+import { UnrecoverableError } from 'bullmq';
 import { importOntology as importOntologyToNeo4j } from '../db/import';
 import { getNeo4jDriver } from '../db/neo4j';
 import {
@@ -160,6 +162,8 @@ export function createImportService(dependencies: ImportServiceDependencies = {}
 			const totalItems = data.ontologyFilePaths.length + data.externalUrls.length;
 			let processed = 0;
 
+			const repoLabel = `${data.repository.owner}/${data.repository.repo}@${data.repository.ref}`;
+
 			const updateProgress = async () => {
 				if (totalItems === 0) {
 					await reportProgress(100);
@@ -170,24 +174,37 @@ export function createImportService(dependencies: ImportServiceDependencies = {}
 				await reportProgress(progress);
 			};
 
-			for (const filePath of data.ontologyFilePaths) {
-				const fileBuffer = await getGitHubClient().downloadRepositoryFile({
-					...data.repository,
-					path: filePath,
-				});
+			try {
+				for (const filePath of data.ontologyFilePaths) {
+					const fileBuffer = await getGitHubClient().downloadRepositoryFile({
+						...data.repository,
+						path: filePath,
+					});
 
-				const ontology = await parseFileBuffer(fileBuffer, filePath, parseOntologyFile);
-				await importOntologyGraph(ontology);
-				processed += 1;
-				await updateProgress();
-			}
+					const ontology = await parseFileBuffer(fileBuffer, filePath, parseOntologyFile);
+					await importOntologyGraph(ontology);
+					processed += 1;
+					await updateProgress();
+				}
 
-			for (const url of data.externalUrls) {
-				const ontology = await parseOntologyUrl(url);
-				await importOntologyGraph(ontology);
-				processed += 1;
-				await updateProgress();
-			}
+				for (const url of data.externalUrls) {
+					const ontology = await parseOntologyUrl(url);
+					await importOntologyGraph(ontology);
+					processed += 1;
+					await updateProgress();
+				}
+      } catch (error) {
+        const message = error instanceof Error ? error.message : String(error);
+        const enriched = `${message} (repo: ${repoLabel})`;
+        if (error instanceof ParserError) {
+          const structured = JSON.stringify({
+            msg: error.message,
+            fullMessage: error.fullMessage ?? error.message,
+          });
+          throw new UnrecoverableError(structured);
+        }
+        throw new Error(enriched);
+      }
 
 			await reportProgress(100);
 			return {
@@ -281,13 +298,12 @@ function uniquePaths(paths: readonly string[]): string[] {
 }
 
 async function parseFileBuffer(
-	buffer: Buffer,
-	sourcePath: string,
-	parseOntologyFile: (filePath: string) => Promise<Ontology>,
+  buffer: Buffer,
+  sourcePath: string,
+  parseOntologyFile: (filePath: string) => Promise<Ontology>,
 ): Promise<Ontology> {
-	const tempDirectory = await mkdtemp(path.join(os.tmpdir(), 'swatedb-import-'));
-	const extension = sourcePath.toLowerCase().endsWith('.obo') ? '.obo' : '.owl';
-	const tempPath = path.join(tempDirectory, `ontology${extension}`);
+  const tempDirectory = await mkdtemp(path.join(os.tmpdir(), 'swatedb-import-'));
+  const tempPath = path.join(tempDirectory, path.basename(sourcePath));
 
 	try {
 		await writeFile(tempPath, buffer);

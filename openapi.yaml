@@ -1,6 +1,6 @@
 openapi: 3.1.0
 servers:
-  - url: https://localhost
+  - url: http://localhost:3000  # TODO: Adjust URL for Docker/production deployment
 
 info:
   description: This Application Programming Interface (API) has been developed to promote interoperability of Semantic Artefact Catalogues in the European Open Science Cloud (EOSC) ecosystem and beyond. 

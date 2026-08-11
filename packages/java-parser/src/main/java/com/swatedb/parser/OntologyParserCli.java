@@ -16,7 +16,18 @@ public final class OntologyParserCli {
             System.out.println(json);
         } catch (ParserException ex) {
             System.err.println("Parser error: " + ex.getMessage());
+            if (ex.getCause() != null) {
+                System.err.println("Caused by: " + ex.getCause().toString());
+            }
+            ex.printStackTrace(System.err);
             System.exit(2);
+        } catch (Exception ex) {
+            System.err.println("Unexpected error: " + ex.getMessage());
+            if (ex.getCause() != null) {
+                System.err.println("Caused by: " + ex.getCause().toString());
+            }
+            ex.printStackTrace(System.err);
+            System.exit(3);
         }
     }
 }

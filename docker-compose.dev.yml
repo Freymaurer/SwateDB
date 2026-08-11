@@ -10,7 +10,6 @@ services:
       LOG_LEVEL: debug
       NODE_OPTIONS: --inspect=0.0.0.0:9229
       JAVA_BRIDGE_JAR_PATH: /opt/swatedb/java-parser.jar
-      JAVA_HOME: /usr/lib/jvm/java-17-openjdk
     volumes:
       - ./packages/backend:/app/packages/backend
       - ./packages/ontology-lib:/app/packages/ontology-lib

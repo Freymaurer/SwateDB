@@ -231,17 +231,35 @@ export function resetQueueResourcesForTests(): void {
 }
 
 async function summarizeJob(job: Job<ImportJobData, ImportJobResult, 'import-ontology'>): Promise<JobSummary> {
-	const state = await job.getState();
-	const progress = typeof job.progress === 'number' ? job.progress : null;
+  const state = await job.getState();
+  const progress = typeof job.progress === 'number' ? job.progress : null;
 
-	return {
-		id: String(job.id),
-		name: job.name,
-		state,
-		progress,
-		attemptsMade: job.attemptsMade,
-		timestamp: job.timestamp,
-		finishedOn: job.finishedOn ?? null,
-		failedReason: job.failedReason ?? null,
-	};
+  const raw = job.failedReason ?? null;
+  let errorSummary: string | null = raw;
+  let fullErrorMessage: string | null = raw;
+
+  if (raw !== null) {
+    try {
+      const parsed = JSON.parse(raw) as unknown;
+      if (parsed !== null && typeof parsed === 'object' && 'msg' in parsed) {
+        errorSummary = String((parsed as { msg: unknown }).msg);
+        fullErrorMessage = 'fullMessage' in parsed ? String((parsed as { fullMessage: unknown }).fullMessage) : raw;
+      }
+    } catch {
+      // Not JSON — treat raw string as both summary and full error
+    }
+  }
+
+  return {
+    id: String(job.id),
+    name: job.name,
+    state,
+    progress,
+    attemptsMade: job.attemptsMade,
+    timestamp: job.timestamp,
+    finishedOn: job.finishedOn ?? null,
+    failedReason: raw,
+    errorSummary,
+    fullErrorMessage,
+  };
 }

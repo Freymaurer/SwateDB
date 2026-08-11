@@ -1,0 +1,32 @@
+name: Bug Report
+description: Report an issue with the ontology or CI validation
+title: '[BUG]: '
+labels: ['bug']
+body:
+  - type: textarea
+    id: description
+    attributes:
+      label: Description
+      description: Describe the bug or issue
+      placeholder: 'Term X has an incorrect definition...'
+    validations:
+      required: true
+
+  - type: input
+    id: ontology_file
+    attributes:
+      label: Affected Ontology File
+      description: Which file(s) contain the issue?
+      placeholder: e.g. 'ontologies/example.obo'
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected Behavior
+      description: What should happen instead?
+
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual Behavior
+      description: What is currently happening?

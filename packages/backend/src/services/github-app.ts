@@ -26,9 +26,10 @@ export interface GitHubRepositoryClient {
 }
 
 interface ContentsResponse {
-	type: string;
-	encoding?: string;
-	content?: string;
+  type: string;
+  encoding?: string;
+  content?: string;
+  download_url?: string;
 }
 
 interface TreeResponse {
@@ -107,16 +108,33 @@ async function downloadFileBuffer(
 		`/repos/${encodeURIComponent(request.owner)}/${encodeURIComponent(request.repo)}/contents/${encodedPath}?ref=${encodeURIComponent(request.ref)}`,
 	);
 
-	if (payload.type !== 'file') {
-		throw new Error(`Path is not a file: ${request.path}`);
-	}
+  if (payload.type !== 'file') {
+    throw new Error(`Path is not a file: ${request.owner}/${request.repo}@${request.ref}:${request.path}`);
+  }
 
-	if (payload.content === undefined || payload.encoding !== 'base64') {
-		throw new Error(`Unsupported file response encoding for path: ${request.path}`);
-	}
+  if (payload.content !== undefined && payload.encoding === 'base64') {
+    const normalized = payload.content.replace(/\n/g, '');
+    return Buffer.from(normalized, 'base64');
+  }
 
-	const normalized = payload.content.replace(/\n/g, '');
-	return Buffer.from(normalized, 'base64');
+  if (payload.download_url !== undefined) {
+    const response = await fetch(payload.download_url, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        'User-Agent': 'swatedb-backend',
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error(`Failed to download file from ${payload.download_url} (${response.status})`);
+    }
+
+    return Buffer.from(await response.arrayBuffer());
+  }
+
+  throw new Error(
+    `Unsupported file response for path: ${request.owner}/${request.repo}@${request.ref}:${request.path}`,
+  );
 }
 
 async function getInstallationToken(

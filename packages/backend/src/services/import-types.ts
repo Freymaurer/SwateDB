@@ -29,4 +29,6 @@ export interface JobSummary {
   timestamp: number;
   finishedOn: number | null;
   failedReason: string | null;
+  errorSummary: string | null;
+  fullErrorMessage: string | null;
 }

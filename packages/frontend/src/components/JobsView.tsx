@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import type { JobSummary } from '../api';
 import { formatTimestamp } from '../lib/format';
 
@@ -36,29 +37,60 @@ interface JobDetailProps {
 }
 
 function JobDetail({ job }: JobDetailProps): JSX.Element {
+  const [copied, setCopied] = useState(false);
+
+  if (job === null) {
+    return (
+      <article className="card bg-base-200 flex-1 p-6">
+        <h3 className="text-lg font-bold mb-4">Job Details</h3>
+        <p className="text-base-content/50">Select a job to inspect its details.</p>
+      </article>
+    );
+  }
+
+  const errorSummary = job.errorSummary ?? job.failedReason;
+  const fullError = job.fullErrorMessage ?? errorSummary;
+
+  const handleCopy = async () => {
+    if (fullError !== null) {
+      await navigator.clipboard.writeText(fullError);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    }
+  };
+
   return (
     <article className="card bg-base-200 flex-1 p-6">
       <h3 className="text-lg font-bold mb-4">Job Details</h3>
-      {job !== null ? (
-        <div className="space-y-3">
-          <p><strong>ID:</strong> {job.id}</p>
-          <p><strong>Name:</strong> {job.name}</p>
-          <p><strong>State:</strong> <span className="badge">{job.state}</span></p>
-          <p><strong>Attempts:</strong> {job.attemptsMade}</p>
-          <div>
-            <p><strong>Progress:</strong> {job.progress ?? 0}%</p>
-            <progress className="progress progress-primary w-full mt-1" value={job.progress ?? 0} max="100" />
-          </div>
-          <p><strong>Created:</strong> {formatTimestamp(job.timestamp)}</p>
-          <p>
-            <strong>Finished:</strong>{' '}
-            {job.finishedOn === null ? 'Not finished' : formatTimestamp(job.finishedOn)}
-          </p>
-          <p><strong>Failure Reason:</strong> {job.failedReason ?? 'None'}</p>
+      <div className="space-y-3">
+        <p><strong>ID:</strong> {job.id}</p>
+        <p><strong>Name:</strong> {job.name}</p>
+        <p><strong>State:</strong> <span className="badge">{job.state}</span></p>
+        <p><strong>Attempts:</strong> {job.attemptsMade}</p>
+        <div>
+          <p><strong>Progress:</strong> {job.progress ?? 0}%</p>
+          <progress className="progress progress-primary w-full mt-1" value={job.progress ?? 0} max="100" />
         </div>
-      ) : (
-        <p className="text-base-content/50">Select a job to inspect its details.</p>
-      )}
+        <p><strong>Created:</strong> {formatTimestamp(job.timestamp)}</p>
+        <p>
+          <strong>Finished:</strong>{' '}
+          {job.finishedOn === null ? 'Not finished' : formatTimestamp(job.finishedOn)}
+        </p>
+        {errorSummary !== null ? (
+          <div>
+            <p><strong>Failure Reason:</strong> {errorSummary}</p>
+            <button
+              className="btn btn-ghost btn-xs mt-1"
+              type="button"
+              onClick={() => void handleCopy()}
+            >
+              {copied ? 'Copied!' : 'Copy full error log'}
+            </button>
+          </div>
+        ) : (
+          <p><strong>Failure Reason:</strong> None</p>
+        )}
+      </div>
     </article>
   );
 }

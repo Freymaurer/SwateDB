@@ -65,6 +65,8 @@ public final class OntologyParser {
             throw new ParserException("Unable to parse ontology document: " + path, e);
         } catch (JsonProcessingException e) {
             throw new ParserException("Unable to serialize ontology payload: " + path, e);
+        } catch (Exception e) {
+            throw new ParserException("Unexpected error parsing ontology document: " + path, e);
         }
     }
 
