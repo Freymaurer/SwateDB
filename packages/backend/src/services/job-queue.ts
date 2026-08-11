@@ -1,6 +1,7 @@
 import IORedis from 'ioredis';
 import { Job, Queue, Worker } from 'bullmq';
 import type { ImportJobData, ImportJobResult, JobSummary } from './import-types';
+import { getLogger } from '../middleware/request-logger';
 
 const IMPORT_QUEUE_NAME = 'ontology-import-jobs';
 const DEFAULT_WORKER_CONCURRENCY = 2;
@@ -158,32 +159,34 @@ export async function startImportWorker(
   );
 
   sharedWorker.on('error', (error) => {
+    const logger = getLogger();
     if (error instanceof Error) {
-      console.error(`[import-worker] Worker error: ${error.message}`, error.stack);
+      logger.error({ err: error }, `[import-worker] Worker error: ${error.message}`);
     } else {
-      console.error(`[import-worker] Worker error: ${String(error)}`);
+      logger.error({ err: error }, `[import-worker] Worker error: ${String(error)}`);
     }
   });
 
   sharedWorker.on('failed', (job, error) => {
+    const logger = getLogger();
     const jobId = job?.id ?? 'unknown';
     const message = error instanceof Error ? error.message : String(error);
-    console.error(`[import-worker] Job ${String(jobId)} failed: ${message}`);
+    logger.error({ jobId: String(jobId), err: error }, `[import-worker] Job ${String(jobId)} failed: ${message}`);
   });
 
   sharedWorker.on('stalled', (jobId) => {
-    console.warn(`[import-worker] Job ${String(jobId)} stalled — will be retried`);
+    getLogger().warn({ jobId: String(jobId) }, `[import-worker] Job ${String(jobId)} stalled — will be retried`);
   });
 
   void (async () => {
     try {
       const activeJobs = await queueResources.queue.getActive();
       for (const job of activeJobs) {
-        console.warn(`[import-worker] Moving stale active job ${String(job.id)} back to waiting`);
+        getLogger().warn({ jobId: String(job.id) }, `[import-worker] Moving stale active job ${String(job.id)} back to waiting`);
         await job.moveToWait();
       }
     } catch (error) {
-      console.warn('[import-worker] Could not clean up stale active jobs', error);
+      getLogger().warn({ err: error }, '[import-worker] Could not clean up stale active jobs');
     }
   })();
 

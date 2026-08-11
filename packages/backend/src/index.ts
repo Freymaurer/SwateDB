@@ -4,7 +4,7 @@ import type { Server } from 'node:http';
 import cors from 'cors';
 import express, { type Express } from 'express';
 import helmet from 'helmet';
-import pino from 'pino';
+import rateLimit from 'express-rate-limit';
 import {
   checkNeo4jHealth,
   closeNeo4jDriver,
@@ -14,6 +14,7 @@ import {
 import { ensureSchema } from './db/schema';
 import { ensureJvm } from '@swatedb/ontology-lib';
 import { errorHandler, notFoundHandler } from './middleware/error-handler';
+import { createRequestLoggerMiddleware, getLogger } from './middleware/request-logger';
 import { createAdminRouter } from './routes/admin';
 import { createHealthRouter, type HealthRouteOptions } from './routes/health';
 import { createArtefactsRouter } from './routes/mod-api/artefacts';
@@ -33,10 +34,7 @@ import {
 	stopImportWorker,
 } from './services/job-queue';
 
-const logger = pino({
-	name: 'swatedb-backend',
-	level: process.env.LOG_LEVEL ?? 'info',
-});
+const logger = getLogger();
 
 export interface CreateAppOptions {
 	health?: HealthRouteOptions;
@@ -62,10 +60,51 @@ export function createApp(options: CreateAppOptions = {}): Express {
 	app.disable('x-powered-by');
 	app.use(helmet());
 	app.use(cors());
+	app.use(createRequestLoggerMiddleware());
+
+	const webhookRateLimiter = rateLimit({
+		windowMs: 60_000,
+		max: 60,
+		standardHeaders: true,
+		legacyHeaders: false,
+		message: {
+			error: {
+				code: 'rate_limit_exceeded',
+				message: 'Too many webhook requests. Please wait before retrying.',
+			},
+		},
+	});
+
+	const adminRateLimiter = rateLimit({
+		windowMs: 60_000,
+		max: 30,
+		standardHeaders: true,
+		legacyHeaders: false,
+		message: {
+			error: {
+				code: 'rate_limit_exceeded',
+				message: 'Too many admin requests. Please wait before retrying.',
+			},
+		},
+	});
+
+	const generalRateLimiter = rateLimit({
+		windowMs: 60_000,
+		max: 1000,
+		standardHeaders: true,
+		legacyHeaders: false,
+		message: {
+			error: {
+				code: 'rate_limit_exceeded',
+				message: 'Too many requests. Please wait before retrying.',
+			},
+		},
+	});
 
 	if (importService !== undefined) {
 		app.use(
 			'/api/github/webhooks',
+			webhookRateLimiter,
 			createWebhookRouter({
 				importService,
 			}),
@@ -75,14 +114,14 @@ export function createApp(options: CreateAppOptions = {}): Express {
 	app.use(express.json({ limit: '2mb' }));
 
 	if (importService !== undefined) {
-		app.use('/api/admin', createAdminRouter({ importService }));
+		app.use('/api/admin', adminRateLimiter, createAdminRouter({ importService }));
 	}
 
 	app.use('/doc/api', createDocsRouter());
 	app.use('/records', createRecordsRouter(modApiService));
 	app.use('/artefacts', createArtefactsRouter(modApiService));
 	app.use('/search', createSearchRouter(modApiService));
-	app.use('/', createCatalogueRouter(modApiService));
+	app.use('/', generalRateLimiter, createCatalogueRouter(modApiService));
 
 	app.use('/health', createHealthRouter(options.health));
 

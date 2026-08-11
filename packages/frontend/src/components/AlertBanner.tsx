@@ -1,9 +1,10 @@
 interface AlertBannerProps {
   type: 'error' | 'success';
   message: string | null;
+  onDismiss?: () => void;
 }
 
-export function AlertBanner({ type, message }: AlertBannerProps): JSX.Element | null {
+export function AlertBanner({ type, message, onDismiss }: AlertBannerProps): JSX.Element | null {
   if (message === null) {
     return null;
   }
@@ -13,6 +14,16 @@ export function AlertBanner({ type, message }: AlertBannerProps): JSX.Element | 
   return (
     <div className={className} role="alert">
       <span>{message}</span>
+      {onDismiss ? (
+        <button
+          className="btn btn-ghost btn-xs ml-2"
+          type="button"
+          onClick={onDismiss}
+          aria-label="Dismiss"
+        >
+          ✕
+        </button>
+      ) : null}
     </div>
   );
 }

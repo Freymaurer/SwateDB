@@ -3,12 +3,10 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { glob } from 'glob';
 import {
-  initJvm,
   parseConfig,
   parseFile,
   matchesImportPatterns,
   validateOntology,
-  ParserError,
   type ValidationResult,
 } from '@swatedb/ontology-lib';
 

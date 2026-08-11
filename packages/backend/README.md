@@ -2,7 +2,7 @@
 
 Backend microservice package for ingestion, indexing, and MOD-API delivery.
 
-Status: Phase 3a + 3b + 3c + 3d implemented.
+Status: Phase 3a + 3b + 3c + 3d + 7 implemented.
 
 ## Implemented in Phase 3a
 
@@ -67,6 +67,17 @@ Status: Phase 3a + 3b + 3c + 3d implemented.
 - Snapshot fixtures for representative JSON-LD responses (`artefacts` collection and `search` collection).
 - CI contract-gate job that fails on route coverage drift, schema mismatch, or snapshot mismatch.
 
+## Implemented in Phase 7
+
+- Structured JSON request logging with pino (request IDs, latency, method/url/status).
+- Sensitive headers and body fields redacted from log output (Authorization, webhook signatures, tokens).
+- Rate limiting for webhook routes (60 req/min), admin routes (30 req/min), and public API (1000 req/min).
+- Helmet security headers enabled (HSTS, CSP, X-Frame-Options, etc.).
+- Neo4j connectivity retry with capped exponential backoff (5 attempts, 500ms base, 10s max).
+- Connection pool configuration for Neo4j driver (max 100 connections, 30s acquisition timeout).
+- Error responses include `requestId` field for log correlation.
+- Worker event logging migrated from `console` to structured pino output.
+
 ## Environment Variables
 
 - PORT
@@ -81,6 +92,23 @@ Status: Phase 3a + 3b + 3c + 3d implemented.
 - GITHUB_PRIVATE_KEY
 - GITHUB_WEBHOOK_SECRET
 - ADMIN_TOKEN
+
+## Error Response Shape
+
+All error responses follow this structure:
+
+```json
+{
+  "error": {
+    "code": "validation_error",
+    "message": "Request validation failed.",
+    "details": [...]
+  },
+  "requestId": "a1b2c3d4-..."
+}
+```
+
+The `requestId` matches the `x-request-id` response header and the request log entry for troubleshooting.
 
 ## Current Commands
 

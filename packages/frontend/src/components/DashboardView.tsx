@@ -1,4 +1,5 @@
 import type { DbStats, HealthResponse, JobSummary } from '../api';
+import { badgeStateColor, statusColor, statusDot } from '../lib/badges';
 import { formatTimestamp } from '../lib/format';
 import { AlertBanner } from './AlertBanner';
 
@@ -10,6 +11,8 @@ interface DashboardViewProps {
   busy: boolean;
   errorMessage: string | null;
   syncMessage: string | null;
+  onDismissError: () => void;
+  onDismissSync: () => void;
 }
 
 export function DashboardView({
@@ -17,16 +20,17 @@ export function DashboardView({
   dbStats,
   stats,
   latestJobs,
-  busy: _busy,
   errorMessage,
   syncMessage,
+  onDismissError,
+  onDismissSync,
 }: DashboardViewProps): JSX.Element {
   const hasLatestJobs = latestJobs.length > 0;
 
   return (
     <div className="space-y-10">
-      <AlertBanner type="error" message={errorMessage} />
-      <AlertBanner type="success" message={syncMessage} />
+      <AlertBanner type="error" message={errorMessage} onDismiss={onDismissError} />
+      <AlertBanner type="success" message={syncMessage} onDismiss={onDismissSync} />
 
       <section>
         <h2 className="text-xl font-bold mb-4">System Health</h2>
@@ -65,7 +69,7 @@ export function DashboardView({
                 <div className="flex justify-between items-center">
                   <div>
                     <strong className="text-sm">{job.id}</strong>
-                    <span className="badge badge-sm ml-2">{job.state}</span>
+                    <span className={`badge badge-sm ml-2 ${badgeStateColor(job.state)}`}>{job.state}</span>
                   </div>
                   <small className="text-base-content/50">{formatTimestamp(job.timestamp)}</small>
                 </div>
@@ -89,7 +93,10 @@ function StatusCard({ label, value }: StatusCardProps): JSX.Element {
   return (
     <article className="stat bg-base-200 rounded-box">
       <div className="stat-title text-xs uppercase tracking-wider">{label}</div>
-      <div className="stat-value text-lg">{value}</div>
+      <div className="stat-value text-lg flex items-center gap-2">
+        <span className={statusDot(value)}></span>
+        <span className={statusColor(value)}>{value}</span>
+      </div>
     </article>
   );
 }

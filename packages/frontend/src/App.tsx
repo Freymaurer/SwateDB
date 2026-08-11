@@ -264,6 +264,8 @@ export function App(): JSX.Element {
             busy={busy}
             errorMessage={!showTokenPrompt ? errorMessage : null}
             syncMessage={syncMessage}
+            onDismissError={() => setErrorMessage(null)}
+            onDismissSync={() => setSyncMessage(null)}
           />
         ) : null}
         {view === 'jobs' ? (

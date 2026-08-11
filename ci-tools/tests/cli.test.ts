@@ -167,7 +167,7 @@ describe('swatedb-ci validate-all', () => {
     // Create a binary file disguised as .obo that the parser will reject
     fs.writeFileSync(path.join(testDir, 'bad.obo'), Buffer.from([0x00, 0x01, 0x02, 0x03]));
 
-    const { stdout, stderr, status } = runCli([
+    const { stderr, status } = runCli([
       'validate-all',
       '--config',
       path.join(testDir, '.swatedb.yml'),

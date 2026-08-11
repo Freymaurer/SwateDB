@@ -1,5 +1,6 @@
 import type { ErrorRequestHandler, RequestHandler } from 'express';
 import { ZodError } from 'zod';
+import { getRequestId } from './request-logger';
 
 export interface ErrorResponseBody {
 	error: {
@@ -7,6 +8,7 @@ export interface ErrorResponseBody {
 		message: string;
 		details?: unknown;
 	};
+	requestId?: string;
 }
 
 export class HttpError extends Error {
@@ -29,19 +31,22 @@ export class HttpError extends Error {
 }
 
 export const notFoundHandler: RequestHandler = (request, response) => {
+	const requestId = getRequestId(request);
 	const payload: ErrorResponseBody = {
 		error: {
 			code: 'not_found',
 			message: `Route ${request.method} ${request.originalUrl} was not found.`,
 		},
+		requestId,
 	};
 
 	response.status(404).json(payload);
 };
 
-export const errorHandler: ErrorRequestHandler = (error, _request, response, _next) => {
+export const errorHandler: ErrorRequestHandler = (error, request, response, _next) => {
 	void _next;
 	const normalizedError = toHttpError(error);
+	const requestId = getRequestId(request);
 
 	const payload: ErrorResponseBody = {
 		error: {
@@ -49,6 +54,7 @@ export const errorHandler: ErrorRequestHandler = (error, _request, response, _ne
 			message: normalizedError.message,
 			details: normalizedError.details,
 		},
+		requestId,
 	};
 
 	response.status(normalizedError.statusCode).json(payload);
