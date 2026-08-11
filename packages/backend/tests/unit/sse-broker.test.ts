@@ -1,20 +1,40 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { SseBroker, getSseBroker, resetSseBrokerForTests } from '../../src/services/sse-broker';
+import { getSseBroker, resetSseBrokerForTests } from '../../src/services/sse-broker';
 import type { ServerResponse } from 'node:http';
 
 function mockResponse() {
 	const chunks: string[] = [];
+
+	let writableEnded = false;
+
 	const res = {
-		writableEnded: false,
-		write: vi.fn((chunk: string) => { chunks.push(chunk); return true; }),
-		end: vi.fn(() => { (res as any).writableEnded = true; return res; }),
+		get writableEnded() {
+			return writableEnded;
+		},
+
+		write: vi.fn((chunk: string) => {
+			chunks.push(chunk);
+			return true;
+		}),
+
+		end: vi.fn(() => {
+			writableEnded = true;
+			return res;
+		}),
+
 		on: vi.fn(),
 		removeListener: vi.fn(),
 		once: vi.fn(),
 		off: vi.fn(),
 	} as unknown as ServerResponse;
 
-	return { res, chunks };
+	return {
+		res,
+		chunks,
+		setWritableEnded: (value: boolean) => {
+			writableEnded = value;
+		},
+	};
 }
 
 describe('SseBroker', () => {
@@ -63,10 +83,10 @@ describe('SseBroker', () => {
 
 	it('does not write to ended clients and removes them', () => {
 		const broker = getSseBroker();
-		const { res } = mockResponse();
-		(res as any).writableEnded = true;
-
+		const { res, setWritableEnded } = mockResponse();
+    
 		broker.addClient(res);
+    setWritableEnded(true);
 		broker.broadcast('job-updated', { id: '1' });
 
 		expect(res.write).not.toHaveBeenCalled();
