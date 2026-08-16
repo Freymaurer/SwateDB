@@ -18,7 +18,7 @@ We should use a language that has support for neo4j and ontology file parsing.
 OGM (Object Graph Mapping) libraries are available for multiple languages and provide more robustness in a synced data model with actual database schema:
 
 - 1. Java - official (https://neo4j.com/docs/ogm-manual/current/tutorial/)
-- 2. TypeScript - community (https://themetalfleece.github.io/neogma/)
+- 2. TypeScript - community (https://neogma.themetalfleece.dev/)
 - 3. .NET - community, not sure about matureness (https://www.youtube.com/watch?v=14SVhbEFQpM, https://github.com/berrybeat/Neo4j.Berries.OGM)
 - 4. Create and develop a custom OGM library.
 
