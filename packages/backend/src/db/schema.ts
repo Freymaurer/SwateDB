@@ -6,6 +6,7 @@ export const SCHEMA_STATEMENTS = [
 	'CREATE FULLTEXT INDEX TermName IF NOT EXISTS FOR (t:Term) ON EACH [t.name]',
 	'CREATE FULLTEXT INDEX TermDefinition IF NOT EXISTS FOR (t:Term) ON EACH [t.definition]',
 	'CREATE FULLTEXT INDEX TermNameAndDefinition IF NOT EXISTS FOR (t:Term) ON EACH [t.name, t.definition]',
+	'CREATE FULLTEXT INDEX OntologyMetadata IF NOT EXISTS FOR (o:Ontology) ON EACH [o.name, o.title, o.description]',
 ] as const;
 
 export async function ensureSchema(driver: Driver): Promise<void> {

@@ -3,13 +3,38 @@ import { useState } from 'react';
 import { searchTerms, type TermSearchEntry } from '../api';
 import { toErrorMessage } from '../lib/errors';
 
+const PAGE_SIZE = 20;
+
 export function TermSearchView(): JSX.Element {
   const [query, setQuery] = useState('');
+  const [submittedQuery, setSubmittedQuery] = useState('');
   const [results, setResults] = useState<TermSearchEntry[]>([]);
-  const [totalItems, setTotalItems] = useState<number | null>(null);
+  const [totalItems, setTotalItems] = useState(0);
+  const [page, setPage] = useState(1);
   const [searched, setSearched] = useState(false);
   const [busy, setBusy] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
+  const totalPages = Math.max(1, Math.ceil(totalItems / PAGE_SIZE));
+  const firstItem = totalItems === 0 ? 0 : (page - 1) * PAGE_SIZE + 1;
+  const lastItem = Math.min(page * PAGE_SIZE, totalItems);
+
+  async function fetchPage(nextPage: number, searchQuery: string): Promise<void> {
+    setBusy(true);
+    setErrorMessage(null);
+
+    try {
+      const payload = await searchTerms(searchQuery, nextPage, PAGE_SIZE);
+      setResults(payload.member);
+      setTotalItems(payload.totalItems);
+      setPage(nextPage);
+      setSearched(true);
+    } catch (error) {
+      setErrorMessage(toErrorMessage(error));
+    } finally {
+      setBusy(false);
+    }
+  }
 
   async function onSubmit(event: FormEvent<HTMLFormElement>): Promise<void> {
     event.preventDefault();
@@ -19,19 +44,8 @@ export function TermSearchView(): JSX.Element {
       return;
     }
 
-    setBusy(true);
-    setErrorMessage(null);
-
-    try {
-      const payload = await searchTerms(normalized);
-      setResults(payload.member);
-      setTotalItems(payload.totalItems);
-      setSearched(true);
-    } catch (error) {
-      setErrorMessage(toErrorMessage(error));
-    } finally {
-      setBusy(false);
-    }
+    setSubmittedQuery(normalized);
+    await fetchPage(1, normalized);
   }
 
   return (
@@ -40,7 +54,7 @@ export function TermSearchView(): JSX.Element {
         <input
           type="text"
           className="input flex-1"
-          placeholder="Search terms by name or definition..."
+          placeholder="Search terms by name..."
           value={query}
           onChange={(event) => setQuery(event.target.value)}
         />
@@ -55,9 +69,36 @@ export function TermSearchView(): JSX.Element {
 
       {searched && errorMessage === null ? (
         <section className="space-y-4">
-          <p className="text-sm text-base-content/60">
-            {totalItems ?? 0} term{totalItems === 1 ? '' : 's'} found
-          </p>
+          <div className="flex items-center justify-between gap-4">
+            <p className="text-sm text-base-content/60">
+              {totalItems === 0
+                ? 'No terms match your search.'
+                : `Showing ${firstItem}–${lastItem} of ${totalItems} terms`}
+            </p>
+            {totalItems > PAGE_SIZE ? (
+              <div className="join">
+                <button
+                  className="btn join-item"
+                  type="button"
+                  disabled={busy || page <= 1}
+                  onClick={() => void fetchPage(page - 1, submittedQuery)}
+                >
+                  «
+                </button>
+                <button className="btn join-item" type="button" disabled>
+                  Page {page} / {totalPages}
+                </button>
+                <button
+                  className="btn join-item"
+                  type="button"
+                  disabled={busy || page >= totalPages}
+                  onClick={() => void fetchPage(page + 1, submittedQuery)}
+                >
+                  »
+                </button>
+              </div>
+            ) : null}
+          </div>
           {results.length === 0 ? (
             <p className="text-base-content/50">No terms match your search.</p>
           ) : (

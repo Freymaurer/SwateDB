@@ -189,9 +189,13 @@ async function getTermCount(): Promise<number> {
   return Number.isFinite(payload.count) ? payload.count : 0;
 }
 
-export async function searchTerms(query: string): Promise<TermSearchResponse> {
+export async function searchTerms(
+  query: string,
+  page = 1,
+  pageSize = 20,
+): Promise<TermSearchResponse> {
   return fetchJson<TermSearchResponse>(
-    `/search/content?format=jsonld&q=${encodeURIComponent(query)}&page=1&pagesize=20`,
+    `/search/content?format=jsonld&q=${encodeURIComponent(query)}&page=${page}&pagesize=${pageSize}`,
   );
 }
 

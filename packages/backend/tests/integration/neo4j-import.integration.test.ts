@@ -1,10 +1,10 @@
-import { spawnSync } from 'node:child_process';
 import neo4j, { type Driver } from 'neo4j-driver';
 import { GenericContainer, type StartedTestContainer } from 'testcontainers';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import type { Ontology } from '@swatedb/ontology-lib';
 import { importOntology } from '../../src/db/import';
 import { ensureSchema } from '../../src/db/schema';
+import { canRunContainerizedIntegration, numberFromResult } from './helpers';
 
 const integrationEnabled = canRunContainerizedIntegration();
 const integration = integrationEnabled ? describe : describe.skip;
@@ -124,26 +124,4 @@ function makeOntology(name: string): Ontology {
       },
     ],
   };
-}
-
-function canRunContainerizedIntegration(): boolean {
-  const result = spawnSync('docker', ['info'], {
-    stdio: 'ignore',
-    shell: process.platform === 'win32',
-  });
-
-  return result.status === 0;
-}
-
-function numberFromResult(value: unknown): number {
-  if (typeof value === 'number') {
-    return value;
-  }
-
-  if (value !== null && typeof value === 'object' && 'toNumber' in value) {
-    const candidate = (value as { toNumber: () => number }).toNumber();
-    return candidate;
-  }
-
-  throw new Error('Could not parse numeric result from Neo4j query.');
 }

@@ -23,13 +23,12 @@ export function createSearchRouter(service: Pick<ModApiService, 'search'>): Rout
 	 *       results from both **metadata** (ontology names, titles, descriptions) and
 	 *       **content** (term names, definitions).
 	 *
-	 *       **Search behaviour:**
-	 *       - Searches are case-insensitive substring matches using `CONTAINS`.
-	 *       - Searching `instrument` matches `instrument`, `instruments`, `instrumentation`,
-	 *         `measuring instrument`, etc.
-	 *       - Multi-word queries like `cell culture` match any record whose searched fields
-	 *         contain both words as substrings.
-	 *       - Results are sorted by `resultType` (metadata first) then alphabetically by label.
+     *       **Search behaviour:**
+     *       - Full-text search via Neo4j full-text indexes (tokenized, case-insensitive).
+     *       - Searching `instrument` matches fields containing the `instrument` token.
+     *       - Multi-word queries like `cell culture` match any record whose searched fields
+     *         contain both words as tokens, in any order or field.
+     *       - Results are sorted by relevance score (descending), then alphabetically by label.
 	 *       - An empty or missing `q` parameter returns a `400 Bad Request`.
 	 *
 	 *       **Result shape:**
@@ -157,18 +156,17 @@ export function createSearchRouter(service: Pick<ModApiService, 'search'>): Rout
 	 *       concepts, properties, and individuals. Does **not** return ontology-level
 	 *       metadata matches.
 	 *
-	 *       **What is searched:**
-	 *       - Term `name` (the human-readable label).
-	 *       - Term `definition` (the textual description/definition).
-	 *
-	 *       **What is NOT searched:**
-	 *       - Ontology names, titles, or descriptions (use `/search/metadata` for those).
-	 *
-	 *       **Search behaviour:**
-	 *       - Case-insensitive substring matching via `CONTAINS`.
-	 *       - Searching `instrument` matches terms named `instrument`, `measuring instrument`,
-	 *         `instrumentation`, `musical instrument`, etc.
-	 *       - Results are sorted alphabetically by term label.
+     *       **What is searched:**
+     *       - Term `name` (the human-readable label). Definitions are **not** searched.
+     *
+     *       **What is NOT searched:**
+     *       - Term definitions, ontology names, titles, or descriptions (use `/search/metadata`
+     *         for ontology metadata).
+     *
+     *       **Search behaviour:**
+     *       - Full-text search via the `TermName` index (tokenized, case-insensitive).
+     *       - Searching `instrument` matches terms whose name contains the `instrument` token.
+     *       - Results are sorted by relevance score (descending), then alphabetically by label.
 	 *
 	 *       **Result shape:**
 	 *       Each result entry includes:
@@ -286,11 +284,12 @@ export function createSearchRouter(service: Pick<ModApiService, 'search'>): Rout
 	 *       **What is NOT searched:**
 	 *       - Individual terms, classes, or concepts (use `/search/content` for those).
 	 *
-	 *       **Search behaviour:**
-	 *       - Case-insensitive substring matching via `CONTAINS`.
-	 *       - Searching `bio` matches ontologies named `obi`, `ncbitaxon`, `bioportal`,
-	 *         or with titles containing `biology`, `biological`, etc.
-	 *       - Results are sorted alphabetically by ontology name.
+     *       **Search behaviour:**
+     *       - Full-text search via the `OntologyMetadata` index (tokenized,
+     *         case-insensitive).
+     *       - Searching `bio` matches ontologies whose name, title, or description contains
+     *         the `bio` token.
+     *       - Results are sorted by relevance score (descending), then alphabetically by name.
 	 *
 	 *       **Result shape:**
 	 *       Each result entry includes:

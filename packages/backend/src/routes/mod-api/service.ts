@@ -281,57 +281,47 @@ export function createModApiService(driver: Driver = getNeo4jDriver()): ModApiSe
     },
 
     search: async (query, input, mode) => {
-      const normalizedQuery = query.trim().toLowerCase();
+      const luceneQuery = toLuceneQuery(query);
+      const metadataEnabled = mode !== 'content';
+      const contentEnabled = mode !== 'metadata';
       const session = driver.session();
 
       try {
-        const whereMetadata =
-          mode === 'content'
-            ? 'FALSE'
-            : `
-                toLower(o.name) CONTAINS $query
-                OR toLower(coalesce(o.title, '')) CONTAINS $query
-                OR toLower(coalesce(o.description, '')) CONTAINS $query
-              `;
-
-        const whereContent =
-          mode === 'metadata'
-            ? 'FALSE'
-            : `
-                toLower(t.name) CONTAINS $query
-                OR toLower(coalesce(t.definition, '')) CONTAINS $query
-              `;
-
         const result = await session.run(
           `
             CALL {
-              MATCH (o:Ontology)
-              WHERE ${whereMetadata}
+              CALL db.index.fulltext.queryNodes('OntologyMetadata', $query) YIELD node AS o, score
+              WHERE $metadataEnabled
               RETURN
                 o.name AS id,
                 o.name AS artefactId,
                 coalesce(o.title, o.name) AS label,
                 o.description AS description,
-                'metadata' AS resultType
+                'metadata' AS resultType,
+                score
 
-              UNION
+              UNION ALL
 
-              MATCH (t:Term)-[:CONTAINED_IN]->(o:Ontology)
-              WHERE ${whereContent}
+              CALL db.index.fulltext.queryNodes('TermName', $query) YIELD node AS t, score
+              WHERE $contentEnabled
+              MATCH (t)-[:CONTAINED_IN]->(o:Ontology)
               RETURN
                 t.accession AS id,
                 o.name AS artefactId,
                 t.name AS label,
                 t.definition AS description,
-                'content' AS resultType
+                'content' AS resultType,
+                score
             }
             RETURN id, artefactId, label, description, resultType
-            ORDER BY resultType ASC, label ASC
+            ORDER BY score DESC, label ASC
             SKIP toInteger($skip)
             LIMIT toInteger($limit)
           `,
           {
-            query: normalizedQuery,
+            query: luceneQuery,
+            metadataEnabled,
+            contentEnabled,
             ...toPaginationParams(input),
           },
         );
@@ -339,20 +329,23 @@ export function createModApiService(driver: Driver = getNeo4jDriver()): ModApiSe
         const countResult = await session.run(
           `
             CALL {
-              MATCH (o:Ontology)
-              WHERE ${whereMetadata}
+              CALL db.index.fulltext.queryNodes('OntologyMetadata', $query) YIELD node AS o
+              WHERE $metadataEnabled
               RETURN 1 AS hit
 
-              UNION
+              UNION ALL
 
-              MATCH (t:Term)-[:CONTAINED_IN]->(o:Ontology)
-              WHERE ${whereContent}
+              CALL db.index.fulltext.queryNodes('TermName', $query) YIELD node AS t
+              WHERE $contentEnabled
+              MATCH (t)-[:CONTAINED_IN]->(o:Ontology)
               RETURN 1 AS hit
             }
             RETURN count(hit) AS totalItems
           `,
           {
-            query: normalizedQuery,
+            query: luceneQuery,
+            metadataEnabled,
+            contentEnabled,
           },
         );
 
@@ -474,4 +467,17 @@ function nullableString(value: unknown): string | null {
 
   const normalized = String(value);
   return normalized.length > 0 ? normalized : null;
+}
+
+function toLuceneQuery(query: string): string {
+  return query
+    .trim()
+    .split(/\s+/)
+    .filter((word) => word.length > 0)
+    .map(escapeLuceneSpecialCharacters)
+    .join(' AND ');
+}
+
+function escapeLuceneSpecialCharacters(value: string): string {
+  return value.replace(/([+\-!(){}[\]^"~*?:\\/])/g, '\\$1');
 }
