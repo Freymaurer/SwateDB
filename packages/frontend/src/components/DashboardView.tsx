@@ -54,9 +54,10 @@ export function DashboardView({
 
       <section>
         <h2 className="text-xl font-bold mb-4">Database Stats</h2>
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
           <MetricCard label="Artefacts" value={dbStats?.artefactsTotal ?? 0} />
           <MetricCard label="Records" value={dbStats?.recordsTotal ?? 0} />
+          <MetricCard label="Terms" value={dbStats?.termsTotal ?? 0} />
         </div>
       </section>
 

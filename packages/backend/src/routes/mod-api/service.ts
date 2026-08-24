@@ -76,6 +76,7 @@ export interface ModApiService {
     input: PaginationInput,
     mode: 'all' | 'content' | 'metadata',
   ): Promise<PaginatedResult<SearchEntry>>;
+  countTerms(): Promise<number>;
 }
 
 export function createModApiService(driver: Driver = getNeo4jDriver()): ModApiService {
@@ -367,6 +368,16 @@ export function createModApiService(driver: Driver = getNeo4jDriver()): ModApiSe
           })),
           totalItems,
         };
+      } finally {
+        await session.close();
+      }
+    },
+
+    countTerms: async () => {
+      const session = driver.session();
+      try {
+        const result = await session.run('MATCH (t:Term) RETURN count(t) AS count');
+        return toNumber(result.records[0]?.get('count'));
       } finally {
         await session.close();
       }

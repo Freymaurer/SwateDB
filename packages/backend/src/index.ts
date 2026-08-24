@@ -22,6 +22,7 @@ import { createCatalogueRouter } from './routes/mod-api/catalogue';
 import { createDocsRouter } from './routes/mod-api/docs';
 import { createRecordsRouter } from './routes/mod-api/records';
 import { createSearchRouter } from './routes/mod-api/search';
+import { createTermsRouter } from './routes/mod-api/terms';
 import { createModApiService } from './routes/mod-api/service';
 import { createWebhookRouter } from './routes/webhooks';
 import { createImportService } from './services/import-service';
@@ -121,6 +122,7 @@ export function createApp(options: CreateAppOptions = {}): Express {
 	app.use('/records', createRecordsRouter(modApiService));
 	app.use('/artefacts', createArtefactsRouter(modApiService));
 	app.use('/search', createSearchRouter(modApiService));
+	app.use('/terms', createTermsRouter(modApiService));
 	app.use('/', generalRateLimiter, createCatalogueRouter(modApiService));
 
 	app.use('/health', createHealthRouter(options.health));

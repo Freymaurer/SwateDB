@@ -82,6 +82,7 @@ export const modApiPathChecks: ModApiPathCheck[] = [
   { path: '/search', query: 'format=jsonld&q=demo&page=1&pagesize=10' },
   { path: '/search/content', query: 'format=jsonld&q=demo&page=1&pagesize=10' },
   { path: '/search/metadata', query: 'format=jsonld&q=demo&page=1&pagesize=10' },
+  { path: '/terms/count' },
 ];
 
 export function createMockModApiService(): ModApiService {
@@ -140,5 +141,6 @@ export function createMockModApiService(): ModApiService {
             : searchEntries.filter((entry) => entry.resultType === 'metadata'),
       totalItems: mode === 'all' ? 2 : 1,
     }),
+    countTerms: async () => 42,
   };
 }

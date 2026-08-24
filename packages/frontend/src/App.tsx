@@ -15,12 +15,13 @@ import {
 import { DashboardView } from './components/DashboardView';
 import { JobsView } from './components/JobsView';
 import { SyncView, type SyncFormState } from './components/SyncView';
+import { TermSearchView } from './components/TermSearchView';
 import { useJobEvents } from './lib/sse';
 import { TokenModal } from './components/TokenModal';
 import { isAuthError, toErrorMessage, toTokenPromptMessage } from './lib/errors';
 import { readStoredToken, storeToken } from './lib/token';
 
-type ViewKey = 'dashboard' | 'jobs' | 'sync';
+type ViewKey = 'dashboard' | 'jobs' | 'sync' | 'terms';
 
 interface ClearTokenOptions {
   clearDraft?: boolean;
@@ -263,6 +264,13 @@ export function App(): JSX.Element {
         >
           Manual Sync
         </button>
+        <button
+          type="button"
+          className={view === 'terms' ? 'tab tab-active' : 'tab'}
+          onClick={() => setView('terms')}
+        >
+          Term Search
+        </button>
       </div>
 
       <main className="flex-1 px-6 pb-8">
@@ -296,6 +304,7 @@ export function App(): JSX.Element {
             busy={busy}
           />
         ) : null}
+        {view === 'terms' ? <TermSearchView /> : null}
       </main>
 
       {showTokenPrompt ? (

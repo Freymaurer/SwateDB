@@ -61,9 +61,27 @@ interface CollectionTotalsResponse {
   totalItems: number;
 }
 
+interface TermCountResponse {
+  count: number;
+}
+
+export interface TermSearchEntry {
+  '@id': string;
+  'dcterms:identifier': string;
+  'dcterms:title': string;
+  'dcterms:description': string | null;
+  'mod:artefact': string;
+}
+
+export interface TermSearchResponse {
+  totalItems: number;
+  member: TermSearchEntry[];
+}
+
 export interface DbStats {
   artefactsTotal: number;
   recordsTotal: number;
+  termsTotal: number;
 }
 
 export class ApiError extends Error {
@@ -140,14 +158,16 @@ export async function triggerConfiguredSync(
 }
 
 export async function getDbStats(): Promise<DbStats> {
-  const [artefactsTotal, recordsTotal] = await Promise.all([
+  const [artefactsTotal, recordsTotal, termsTotal] = await Promise.all([
     getCollectionTotal('/artefacts'),
     getCollectionTotal('/records'),
+    getTermCount(),
   ]);
 
   return {
     artefactsTotal,
     recordsTotal,
+    termsTotal,
   };
 }
 
@@ -162,6 +182,17 @@ async function getCollectionTotal(endpointBase: string): Promise<number> {
     `${endpointBase}?format=jsonld&page=1&pagesize=1`,
   );
   return Number.isFinite(payload.totalItems) ? payload.totalItems : 0;
+}
+
+async function getTermCount(): Promise<number> {
+  const payload = await fetchJson<TermCountResponse>('/terms/count');
+  return Number.isFinite(payload.count) ? payload.count : 0;
+}
+
+export async function searchTerms(query: string): Promise<TermSearchResponse> {
+  return fetchJson<TermSearchResponse>(
+    `/search/content?format=jsonld&q=${encodeURIComponent(query)}&page=1&pagesize=20`,
+  );
 }
 
 async function fetchJson<T>(

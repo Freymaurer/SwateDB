@@ -19,6 +19,17 @@ describe('MOD API route coverage', () => {
     }
   });
 
+  it('serves the term count as plain JSON', async () => {
+    const app = createApp({
+      modApiService: createMockModApiService(),
+    });
+
+    const response = await request(app).get('/terms/count');
+
+    expect(response.status).toBe(200);
+    expect(response.body).toStrictEqual({ count: 42 });
+  });
+
   it('returns 406 for runtime-unsupported serialization format', async () => {
     const app = createApp({
       modApiService: createMockModApiService(),

@@ -15,6 +15,7 @@ export default defineConfig({
       '/artefacts': proxyTarget,
       '/records': proxyTarget,
       '/search': proxyTarget,
+      '/terms': proxyTarget,
       '/doc/api': proxyTarget,
     },
   },
