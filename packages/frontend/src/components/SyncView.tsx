@@ -35,9 +35,9 @@ function ConfiguredRepoCard({
         <h3 className="card-title text-base">
           {repo.label ?? `${repo.owner}/${repo.repo}`}
         </h3>
-        <p className="text-sm text-base-content/60">
+        <a className="link" href={`https://github.com/${repo.owner}/${repo.repo}`} target="_blank" rel="noopener noreferrer">
           {repo.owner}/{repo.repo}
-        </p>
+        </a>
         <label className="form-control w-full">
           <div className="label py-0">
             <span className="label-text text-xs">Git Reference</span>

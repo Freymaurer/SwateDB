@@ -1,5 +1,12 @@
 # SwateDB
 
+---
+
+check out https://github.com/ts4nfdi/api-gateway/tree/main/src/main/resources/backend_types
+https://www.ebi.ac.uk/ols4/api-docs
+
+---
+
 SwateDB is a monorepo for an ontology-focused microservice platform backed by Neo4j.
 It ingests ontology files from GitHub repositories, parses .obo/.owl data through a Java parser bridge,
 and exposes MOD-API compatible endpoints for discovery and interoperability.

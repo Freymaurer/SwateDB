@@ -10,6 +10,8 @@ services:
       LOG_LEVEL: debug
       NODE_OPTIONS: --inspect=0.0.0.0:9229
       JAVA_BRIDGE_JAR_PATH: /opt/swatedb/java-parser.jar
+      CHOKIDAR_USEPOLLING: "1"
+      CHOKIDAR_INTERVAL: "500"
     volumes:
       - ./packages/backend:/app/packages/backend
       - ./packages/ontology-lib:/app/packages/ontology-lib
@@ -26,6 +28,8 @@ services:
     environment:
       NODE_ENV: development
       VITE_API_PROXY_TARGET: http://backend:3000
+      CHOKIDAR_USEPOLLING: "1"
+      CHOKIDAR_INTERVAL: "500"
     volumes:
       - ./packages/frontend:/app/packages/frontend
     ports:

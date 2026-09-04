@@ -1,3 +1,4 @@
+// hmr-check
 import type { FormEvent } from 'react';
 import { useEffect, useMemo, useState } from 'react';
 import {
